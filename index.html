@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>uninspired artisan — Studio Dashboard</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; padding:0; height:100%; }
+
+  :root{
+    --accent:#d32f2f;
+    --bg:#fdfaf3;
+    --surface:#ffffff;
+    --grad-a:#2e7d32;
+    --grad-b:#fbc02d;
+    --bg-ga:#e8f5e9;
+    --bg-gb:#fffde7;
+    --text:#241f16;
+    --text-muted:#7a7160;
+    --border: rgba(30,20,10,0.10);
+    --shadow: 0 8px 24px rgba(40,30,10,0.10);
+    --radius:18px;
+    --danger:#e53935;
+    --success:#43a047;
+    --warning:#f9a825;
+  }
+
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: linear-gradient(160deg, var(--bg-ga), var(--bg-gb));
+    background-attachment: fixed;
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button, input, select, textarea{ font-family:inherit; font-size:16px; color:inherit; }
+  button{ cursor:pointer; }
+  img{ max-width:100%; display:block; }
+
+  #app{ display:flex; min-height:100vh; min-height:100dvh; align-items:stretch; }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:250px;
+    flex-shrink:0;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(10px);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:22px 16px;
+    position:sticky;
+    top:0;
+    height:100vh;
+    height:100dvh;
+    overflow-y:auto;
+    z-index:60;
+  }
+  .sidebar-header{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:22px; }
+  .logo-tap{ background:none; border:none; padding:0; width:76px; height:76px; border-radius:22px; overflow:hidden; margin-bottom:10px; box-shadow: var(--shadow); flex-shrink:0; }
+  .logo-circle{ width:100%; height:100%; object-fit:cover; border-radius:22px; }
+  .logo-placeholder{
+    width:100%; height:100%; border-radius:22px;
+    background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:22px; letter-spacing:0.5px;
+  }
+  .brand-name{ font-size:17px; font-weight:700; line-height:1.25; }
+  .brand-tagline{ font-size:12px; color:var(--text-muted); font-style:italic; margin-top:2px; }
+
+  .sidebar-nav{ display:flex; flex-direction:column; gap:6px; flex:1; }
+  .nav-btn{
+    display:flex; align-items:center; gap:12px;
+    min-height:48px; width:100%; padding:0 14px;
+    border:none; border-radius:14px; background:transparent;
+    font-size:15px; font-weight:600; text-align:left; color:var(--text);
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-btn .nav-icon{ font-size:18px; width:22px; text-align:center; }
+  .nav-btn.active{ background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color:#fff; box-shadow:var(--shadow); }
+  .nav-btn:not(.active):active{ background: rgba(0,0,0,0.06); }
+
+  .sidebar-footer{ font-size:11px; color:var(--text-muted); text-align:center; padding-top:14px; }
+
+  /* ---------- MAIN ---------- */
+  .main{ flex:1; padding:24px 26px 60px; overflow-y:auto; min-width:0; }
+  .page{ display:none; }
+  .page.active{ display:block; }
+  .page-header{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
+  .page-title{ font-size:24px; font-weight:800; margin:0; }
+  .page-sub{ font-size:13px; color:var(--text-muted); margin-top:2px; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+    padding:26px 28px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    box-shadow: var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  .hero:before{
+    content:''; position:absolute; right:-40px; top:-60px; width:220px; height:220px;
+    background: rgba(255,255,255,0.14); border-radius:50%;
+  }
+  .hero-logo-tap{ background:none; border:none; padding:0; width:72px; height:72px; border-radius:50%; overflow:hidden; flex-shrink:0; box-shadow:0 4px 14px rgba(0,0,0,0.2); z-index:1; border:3px solid rgba(255,255,255,0.7); }
+  .hero-logo-circle{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .hero-logo-placeholder{ width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:center; font-size:26px; }
+  .hero-text{ z-index:1; }
+  .hero-greeting{ font-size:22px; font-weight:800; }
+  .hero-title{ font-size:14px; opacity:0.92; margin-top:2px; }
+  .hero-date{ font-size:13px; opacity:0.85; margin-top:6px; }
+
+  /* ---------- STATS ---------- */
+  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:16px; margin-top:20px; }
+  .stat-card{ background:var(--surface); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); }
+  .stat-label{ font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:700; }
+  .stat-value{ font-size:26px; font-weight:800; margin-top:6px; }
+  .stat-sub{ font-size:12px; color:var(--text-muted); margin-top:4px; }
+
+  /* ---------- CHART ---------- */
+  .card{ background:var(--surface); border-radius:var(--radius); padding:20px 22px; box-shadow:var(--shadow); margin-top:16px; }
+  .card-title{ font-size:15px; font-weight:800; margin:0 0 14px; }
+  .bar-chart{ display:flex; align-items:flex-end; gap:10px; height:150px; }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .bar-value{ font-size:11px; color:var(--text-muted); margin-bottom:4px; font-weight:700; }
+  .bar{ width:100%; max-width:36px; border-radius:8px 8px 3px 3px; background:linear-gradient(180deg, var(--grad-b), var(--grad-a)); min-height:4px; transition:height 0.3s; }
+  .bar-today{ box-shadow: 0 0 0 2px var(--accent) inset; }
+  .chart-labels-row{ display:flex; gap:10px; margin-top:8px; }
+  .bar-label{ flex:1; text-align:center; font-size:11px; color:var(--text-muted); font-weight:600; }
+
+  .dash-columns{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+
+  /* ---------- LIST ITEMS ---------- */
+  .list-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 4px; border-bottom:1px solid var(--border); min-height:44px; }
+  .list-item:last-child{ border-bottom:none; }
+  .li-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .li-title{ font-size:14px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:220px; }
+  .li-sub{ font-size:12px; color:var(--text-muted); margin-top:1px; }
+  .li-right{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .li-amount{ font-size:13px; font-weight:700; }
+
+  .empty-state{ text-align:center; color:var(--text-muted); font-size:13px; padding:26px 10px; }
+
+  /* ---------- BADGES ---------- */
+  .badge{ font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; }
+  .badge-pending{ background:#eceff1; color:#455a64; }
+  .badge-partial{ background:#fff8e1; color:#f57f17; }
+  .badge-paid{ background:#e8f5e9; color:#2e7d32; }
+  .badge-overdue{ background:#ffebee; color:#c62828; }
+
+  .prio-dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .prio-high{ background:var(--danger); }
+  .prio-medium{ background:var(--warning); }
+  .prio-low{ background:var(--success); }
+
+  /* ---------- BUTTONS ---------- */
+  .btn{ min-height:44px; padding:0 18px; border-radius:12px; border:none; font-weight:700; font-size:14px; }
+  .btn-primary{ background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color:#fff; box-shadow:var(--shadow); }
+  .btn-secondary{ background: var(--surface); color:var(--text); border:1px solid var(--border); }
+  .btn-danger{ background:#ffebee; color:var(--danger); }
+  .btn-accent{ background:var(--accent); color:#fff; }
+  .btn-small{ min-height:38px; padding:0 14px; font-size:13px; }
+  .btn-block{ width:100%; }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* ---------- SEARCH / INPUTS ---------- */
+  .search-input, .form-input, .form-select, .form-textarea{
+    width:100%; min-height:44px; border:1px solid var(--border); border-radius:12px;
+    padding:10px 14px; background:var(--surface); color:var(--text);
+  }
+  .form-textarea{ min-height:80px; padding-top:10px; resize:vertical; }
+  .search-wrap{ margin-bottom:16px; }
+
+  /* ---------- CUSTOMERS ---------- */
+  .customers-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .customer-card{ background:var(--surface); border-radius:16px; padding:16px; box-shadow:var(--shadow); display:flex; align-items:center; gap:12px; min-height:44px; }
+  .avatar-circle{
+    width:46px; height:46px; border-radius:50%; flex-shrink:0;
+    background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px;
+  }
+  .avatar-lg{ width:64px; height:64px; font-size:20px; }
+  .customer-card-info{ min-width:0; flex:1; }
+  .cc-name{ font-size:15px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cc-sub{ font-size:12px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cc-meta{ font-size:11px; color:var(--accent); font-weight:700; margin-top:2px; }
+  .chev{ color:var(--text-muted); font-size:20px; }
+
+  .detail-header{ display:flex; align-items:center; gap:14px; }
+  .detail-name{ font-size:20px; font-weight:800; }
+  .detail-sub{ font-size:13px; color:var(--text-muted); }
+  .detail-notes{ background:var(--bg); border-radius:12px; padding:12px 14px; font-size:13px; margin-top:16px; white-space:pre-wrap; }
+  .detail-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .section-subtitle{ font-size:14px; font-weight:800; margin:22px 0 6px; }
+  .back-btn{ background:none; border:none; font-size:14px; font-weight:700; color:var(--accent); min-height:44px; padding:0 4px; margin-bottom:6px; }
+
+  /* ---------- ORDERS ---------- */
+  .filter-tabs{ display:flex; gap:8px; overflow-x:auto; margin-bottom:16px; padding-bottom:2px; }
+  .filter-tab{ min-height:40px; padding:0 16px; border-radius:999px; border:1px solid var(--border); background:var(--surface); font-size:13px; font-weight:700; white-space:nowrap; }
+  .filter-tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  .orders-grid{ display:flex; flex-direction:column; gap:12px; }
+  .order-card{ background:var(--surface); border-radius:16px; padding:14px; box-shadow:var(--shadow); display:flex; gap:14px; align-items:center; min-height:44px; }
+  .order-thumb{ width:60px; height:60px; border-radius:12px; overflow:hidden; flex-shrink:0; background:var(--bg); display:flex; align-items:center; justify-content:center; }
+  .order-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .thumb-placeholder{ font-size:22px; }
+  .order-info{ flex:1; min-width:0; }
+  .oi-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .oi-customer{ font-size:14px; font-weight:800; }
+  .oi-desc{ font-size:13px; color:var(--text-muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .oi-bottom{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+  .oi-amount{ font-size:13px; font-weight:700; }
+  .oi-due{ font-size:11px; color:var(--text-muted); }
+
+  /* ---------- TASKS ---------- */
+  .view-tabs{ display:flex; gap:8px; margin-bottom:16px; }
+  .view-tab{ min-height:42px; padding:0 18px; border-radius:12px; border:1px solid var(--border); background:var(--surface); font-weight:700; font-size:14px; }
+  .view-tab.active{ background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color:#fff; border-color:transparent; }
+
+  .check-circle{ width:24px; height:24px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff; flex-shrink:0; }
+  .check-circle.checked{ background:var(--success); border-color:var(--success); }
+  .task-done .li-title{ text-decoration:line-through; color:var(--text-muted); }
+
+  .calendar-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .calendar-nav-btn{ width:44px; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--surface); font-size:18px; font-weight:800; }
+  .calendar-month-label{ font-size:16px; font-weight:800; }
+  .calendar-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-weekday{ text-align:center; font-size:11px; font-weight:800; color:var(--text-muted); padding:4px 0; }
+  .cal-cell{ min-height:56px; border-radius:10px; background:var(--bg); padding:6px 4px; display:flex; flex-direction:column; align-items:center; gap:4px; border:1px solid transparent; }
+  .cal-empty{ background:transparent; }
+  .cal-today{ border-color: var(--accent); }
+  .cal-selected{ background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); }
+  .cal-selected .cal-daynum{ color:#fff; }
+  .cal-daynum{ font-size:13px; font-weight:700; }
+  .cal-dots{ display:flex; gap:2px; flex-wrap:wrap; justify-content:center; min-height:8px; }
+  .cal-dot{ width:6px; height:6px; border-radius:50%; }
+  .cal-more{ font-size:9px; color:var(--text-muted); font-weight:700; }
+  .calendar-day-panel{ margin-top:18px; background:var(--surface); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
+  .cal-panel-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:10px; flex-wrap:wrap; }
+  .cal-panel-header span{ font-weight:800; font-size:14px; }
+
+  /* ---------- MODALS ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(20,15,8,0.45);
+    align-items:center; justify-content:center; z-index:200; padding:18px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-box{ background:var(--surface); border-radius:var(--radius); width:100%; max-width:480px; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .modal-header{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); border-radius:var(--radius) var(--radius) 0 0; z-index:2; }
+  .modal-title{ font-size:17px; font-weight:800; }
+  .modal-close{ width:36px; height:36px; border-radius:50%; border:none; background:var(--bg); font-size:16px; font-weight:800; color:var(--text-muted); }
+  .modal-body{ padding:20px; }
+  .modal-footer{ display:flex; gap:10px; padding:16px 20px 20px; flex-wrap:wrap; }
+
+  .form-group{ margin-bottom:16px; }
+  .form-label{ display:block; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:6px; }
+  .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .upload-zone{
+    border:2px dashed var(--border); border-radius:14px; min-height:120px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; gap:6px; background:var(--bg); overflow:hidden; position:relative;
+  }
+  .upload-icon{ font-size:30px; }
+  .upload-hint{ font-size:12px; color:var(--text-muted); font-weight:600; }
+  .upload-preview-img{ width:100%; max-height:180px; object-fit:cover; }
+  .remove-image-btn{ position:absolute; top:8px; right:8px; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.55); color:#fff; border:none; font-weight:800; z-index:2; }
+
+  /* ---------- THEME MODAL ---------- */
+  .preset-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:10px; margin-bottom:18px; }
+  .preset-swatch{ border:2px solid var(--border); border-radius:14px; min-height:56px; padding:6px; display:flex; flex-direction:column; gap:4px; background:var(--surface); }
+  .preset-swatch-bar{ height:22px; border-radius:8px; }
+  .preset-swatch-label{ font-size:10px; font-weight:700; text-align:center; color:var(--text-muted); }
+  .color-field-row{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .color-field-row label{ flex:1; font-size:13px; font-weight:700; }
+  .color-input{ width:52px; height:44px; border:1px solid var(--border); border-radius:10px; padding:2px; background:var(--surface); }
+  .hex-label{ font-size:11px; color:var(--text-muted); width:66px; text-align:right; }
+  .theme-section-title{ font-size:13px; font-weight:800; margin:18px 0 10px; }
+  .theme-preview-box{ border-radius:16px; padding:16px; background:var(--bg); margin-top:10px; }
+  .theme-preview-hero{ border-radius:14px; padding:16px; color:#fff; font-weight:800; margin-bottom:10px; }
+  .theme-preview-row{ display:flex; align-items:center; gap:10px; }
+  .theme-preview-btn{ min-height:38px; padding:0 16px; border-radius:10px; color:#fff; font-weight:700; font-size:13px; border:none; }
+  .theme-preview-badge{ font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; }
+
+  /* ---------- RESPONSIVE / iPad ---------- */
+  @media (max-width: 900px){
+    #app{ flex-direction:column; }
+    .sidebar{ width:100%; height:auto; position:sticky; flex-direction:row; align-items:center; padding:12px 14px; overflow-x:auto; }
+    .sidebar-header{ flex-direction:row; margin-bottom:0; margin-right:14px; text-align:left; flex-shrink:0; }
+    .logo-tap{ width:48px; height:48px; border-radius:14px; margin-bottom:0; margin-right:10px; }
+    .logo-placeholder{ border-radius:14px; font-size:16px; }
+    .brand-name{ font-size:14px; }
+    .brand-tagline{ display:none; }
+    .sidebar-nav{ flex-direction:row; overflow-x:auto; flex:1; }
+    .nav-btn{ width:auto; white-space:nowrap; }
+    .nav-btn span.nav-label{ display:inline; }
+    .sidebar-footer{ display:none; }
+    .main{ padding:18px 16px 50px; }
+    .dash-columns{ grid-template-columns:1fr; }
+    .hero{ flex-wrap:wrap; }
+    .form-row{ grid-template-columns:1fr; }
+  }
+
+  @media (max-width: 520px){
+    .stats-grid{ grid-template-columns:repeat(2,1fr); }
+    .li-title{ max-width:140px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <button class="logo-tap" onclick="triggerLogoUpload('sidebar')" title="Tap to upload logo">
+        <img id="sidebarLogoImg" class="logo-circle" style="display:none;">
+        <div id="sidebarLogoPlaceholder" class="logo-placeholder">UA</div>
+      </button>
+      <div>
+        <div class="brand-name">uninspired artisan</div>
+        <div class="brand-tagline">handmade &amp; slightly overthought</div>
+      </div>
+    </div>
+    <input type="file" id="sidebarLogoInput" accept="image/*" style="display:none" onchange="handleLogoFile(this,'sidebar')">
+    <input type="file" id="heroLogoInput" accept="image/*" style="display:none" onchange="handleLogoFile(this,'hero')">
+
+    <div class="sidebar-nav">
+      <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard')"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></button>
+      <button class="nav-btn" data-page="customers" onclick="showPage('customers')"><span class="nav-icon">👥</span><span class="nav-label">Customers</span></button>
+      <button class="nav-btn" data-page="orders" onclick="showPage('orders')"><span class="nav-icon">🧾</span><span class="nav-label">Orders</span></button>
+      <button class="nav-btn" data-page="tasks" onclick="showPage('tasks')"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span></button>
+      <button class="nav-btn" onclick="openThemeModal()"><span class="nav-icon">🎨</span><span class="nav-label">Customize Theme</span></button>
+    </div>
+    <div class="sidebar-footer">uninspired artisan studio</div>
+  </div>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main">
+
+    <!-- ---------- DASHBOARD ---------- -->
+    <div class="page active" id="page-dashboard">
+      <div class="hero">
+        <button class="hero-logo-tap" onclick="triggerLogoUpload('hero')" title="Tap to upload logo">
+          <img id="heroLogoImg" class="hero-logo-circle" style="display:none;">
+          <div id="heroLogoPlaceholder" class="hero-logo-placeholder">🧵</div>
+        </button>
+        <div class="hero-text">
+          <div class="hero-greeting" id="heroGreeting">Good day!</div>
+          <div class="hero-title">uninspired artisan — studio dashboard</div>
+          <div class="hero-date" id="heroDateText">—</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Today</div>
+          <div class="stat-value" id="statTodayVal">$0.00</div>
+          <div class="stat-sub" id="statTodaySub">0 orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Month</div>
+          <div class="stat-value" id="statMonthVal">$0.00</div>
+          <div class="stat-sub" id="statMonthSub">0 orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">This Year</div>
+          <div class="stat-value" id="statYearVal">$0.00</div>
+          <div class="stat-sub" id="statYearSub">0 orders</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Sales — last 7 days</div>
+        <div class="bar-chart" id="chartBars"></div>
+        <div class="chart-labels-row" id="chartLabels"></div>
+      </div>
+
+      <div class="dash-columns">
+        <div class="card">
+          <div class="card-title">Upcoming Tasks</div>
+          <div id="upcomingTasksList"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Orders</div>
+          <div id="recentOrdersList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- CUSTOMERS ---------- -->
+    <div class="page" id="page-customers">
+      <div id="customersListView">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Customers</h1>
+            <div class="page-sub">Everyone who's ever trusted your questionable artistic judgement.</div>
+          </div>
+          <button class="btn btn-primary" onclick="openCustomerModal(null)">+ New Customer</button>
+        </div>
+        <div class="search-wrap">
+          <input type="text" class="search-input" id="customerSearch" placeholder="Search customers by name, email, or phone…" oninput="renderCustomers()">
+        </div>
+        <div class="customers-grid" id="customersList"></div>
+      </div>
+
+      <div id="customerDetailView" style="display:none;">
+        <button class="back-btn" onclick="closeCustomerDetail()">‹ Back to Customers</button>
+        <div class="card" id="customerDetailContent"></div>
+      </div>
+    </div>
+
+    <!-- ---------- ORDERS ---------- -->
+    <div class="page" id="page-orders">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Orders</h1>
+          <div class="page-sub">Commissions, custom pieces, and the occasional refund request.</div>
+        </div>
+        <button class="btn btn-primary" onclick="openOrderModal(null)">+ New Order</button>
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setOrderFilter('all', this)">All</button>
+        <button class="filter-tab" onclick="setOrderFilter('pending', this)">Pending</button>
+        <button class="filter-tab" onclick="setOrderFilter('partial', this)">Partial</button>
+        <button class="filter-tab" onclick="setOrderFilter('paid', this)">Paid</button>
+        <button class="filter-tab" onclick="setOrderFilter('overdue', this)">Overdue</button>
+      </div>
+      <div class="orders-grid" id="ordersList"></div>
+    </div>
+
+    <!-- ---------- TASKS ---------- -->
+    <div class="page" id="page-tasks">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Tasks</h1>
+          <div class="page-sub">Things you'll definitely do today, probably.</div>
+        </div>
+        <button class="btn btn-primary" onclick="openTaskModal(null)">+ New Task</button>
+      </div>
+      <div class="view-tabs">
+        <button class="view-tab active" onclick="setTaskView('list', this)">List</button>
+        <button class="view-tab" onclick="setTaskView('calendar', this)">Calendar</button>
+      </div>
+      <div id="taskListView" class="card">
+        <div id="taskListItems"></div>
+      </div>
+      <div id="taskCalendarView" class="card" style="display:none;">
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" onclick="calendarPrevMonth()">‹</button>
+          <div class="calendar-month-label" id="calendarMonthLabel">—</div>
+          <button class="calendar-nav-btn" onclick="calendarNextMonth()">›</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-day-panel" id="calendarDayPanel"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== CUSTOMER MODAL ===================== -->
+<div class="modal-overlay" id="customerModal" onclick="overlayClick(event,'customerModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="customerModalTitle">New Customer</div>
+      <button class="modal-close" onclick="closeModal('customerModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" id="customerNameInput" placeholder="Jane Doe">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="customerEmailInput" placeholder="jane@example.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input type="tel" class="form-input" id="customerPhoneInput" placeholder="(555) 555-5555">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="customerNotesInput" placeholder="Prefers matte finishes, allergic to glitter…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-block" onclick="saveCustomer()">Save Customer</button>
+      <button class="btn btn-danger" id="customerDeleteBtn" style="display:none;" onclick="deleteCustomer(editingCustomerId)">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('customerModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ORDER MODAL ===================== -->
+<div class="modal-overlay" id="orderModal" onclick="overlayClick(event,'orderModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="orderModalTitle">New Order</div>
+      <button class="modal-close" onclick="closeModal('orderModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Customer</label>
+        <select class="form-select" id="orderCustomerSelect"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="orderDescInput" placeholder="Custom hand-painted mug set…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Total Amount</label>
+          <input type="number" step="0.01" min="0" class="form-input" id="orderTotalInput" placeholder="0.00" oninput="autoSuggestOrderStatus()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount Paid</label>
+          <input type="number" step="0.01" min="0" class="form-input" id="orderPaidInput" placeholder="0.00" oninput="autoSuggestOrderStatus()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="orderStatusInput">
+            <option value="pending">Pending</option>
+            <option value="partial">Partial</option>
+            <option value="paid">Paid</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="date" class="form-input" id="orderDueInput" oninput="autoSuggestOrderStatus()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reference Image</label>
+        <input type="file" id="orderImageInput" accept="image/*" style="display:none" onchange="handleOrderImageFile(this)">
+        <div class="upload-zone" id="orderImageZone" onclick="triggerOrderImageUpload()">
+          <div class="upload-icon">📷</div>
+          <div class="upload-hint">Tap to add a reference image</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-block" onclick="saveOrder()">Save Order</button>
+      <button class="btn btn-danger" id="orderDeleteBtn" style="display:none;" onclick="deleteOrder(editingOrderId)">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('orderModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TASK MODAL ===================== -->
+<div class="modal-overlay" id="taskModal" onclick="overlayClick(event,'taskModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="taskModalTitle">New Task</div>
+      <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" class="form-input" id="taskTitleInput" placeholder="Glaze the pottery…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="taskNotesInput" placeholder="Optional details"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="form-select" id="taskPriorityInput">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="date" class="form-input" id="taskDueInput">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-block" onclick="saveTask()">Save Task</button>
+      <button class="btn btn-danger" id="taskDeleteBtn" style="display:none;" onclick="deleteTask(editingTaskId)">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('taskModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== THEME MODAL ===================== -->
+<div class="modal-overlay" id="themeModal" onclick="overlayClick(event,'themeModal')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Customize Theme</div>
+      <button class="modal-close" onclick="cancelTheme()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="theme-section-title">Presets</div>
+      <div class="preset-grid">
+        <button class="preset-swatch" onclick="applyPreset('harvest')">
+          <div class="preset-swatch-bar" style="background:linear-gradient(135deg,#2e7d32,#fbc02d)"></div>
+          <div class="preset-swatch-label">Harvest</div>
+        </button>
+        <button class="preset-swatch" onclick="applyPreset('tomato')">
+          <div class="preset-swatch-bar" style="background:linear-gradient(135deg,#ef5350,#ffca28)"></div>
+          <div class="preset-swatch-label">Tomato Vine</div>
+        </button>
+        <button class="preset-swatch" onclick="applyPreset('citrus')">
+          <div class="preset-swatch-bar" style="background:linear-gradient(135deg,#fdd835,#66bb6a)"></div>
+          <div class="preset-swatch-label">Citrus</div>
+        </button>
+        <button class="preset-swatch" onclick="applyPreset('vineyard')">
+          <div class="preset-swatch-bar" style="background:linear-gradient(135deg,#1b5e20,#f9a825)"></div>
+          <div class="preset-swatch-label">Vineyard</div>
+        </button>
+      </div>
+
+      <div class="theme-section-title">Accent Color</div>
+      <div class="color-field-row">
+        <label for="accentColorInput">Accent (buttons, badges)</label>
+        <span class="hex-label" id="accentHexLabel">#d32f2f</span>
+        <input type="color" class="color-input" id="accentColorInput" value="#d32f2f" oninput="previewTheme()">
+      </div>
+
+      <div class="theme-section-title">Hero Banner Gradient</div>
+      <div class="color-field-row">
+        <label for="gradAInput">From</label>
+        <span class="hex-label" id="gradAHexLabel">#2e7d32</span>
+        <input type="color" class="color-input" id="gradAInput" value="#2e7d32" oninput="previewTheme()">
+      </div>
+      <div class="color-field-row">
+        <label for="gradBInput">To</label>
+        <span class="hex-label" id="gradBHexLabel">#fbc02d</span>
+        <input type="color" class="color-input" id="gradBInput" value="#fbc02d" oninput="previewTheme()">
+      </div>
+
+      <div class="theme-section-title">Page Background Gradient</div>
+      <div class="color-field-row">
+        <label for="bgGaInput">From</label>
+        <span class="hex-label" id="bgGaHexLabel">#e8f5e9</span>
+        <input type="color" class="color-input" id="bgGaInput" value="#e8f5e9" oninput="previewTheme()">
+      </div>
+      <div class="color-field-row">
+        <label for="bgGbInput">To</label>
+        <span class="hex-label" id="bgGbHexLabel">#fffde7</span>
+        <input type="color" class="color-input" id="bgGbInput" value="#fffde7" oninput="previewTheme()">
+      </div>
+
+      <div class="theme-section-title">Live Preview</div>
+      <div class="theme-preview-box">
+        <div class="theme-preview-hero" id="themePreviewHero">uninspired artisan</div>
+        <div class="theme-preview-row">
+          <button class="theme-preview-btn" id="themePreviewBtn">New Order</button>
+          <span class="theme-preview-badge" id="themePreviewBadge">Paid</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-block" onclick="saveTheme()">Save Theme</button>
+      <button class="btn btn-secondary" onclick="resetThemeDefault()">Reset to Default</button>
+      <button class="btn btn-secondary" onclick="cancelTheme()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var STORAGE_KEY = 'uninspiredArtisanData_v1';
+  var appData = null;
+  var currentPage = 'dashboard';
+  var editingCustomerId = null;
+  var editingOrderId = null;
+  var editingTaskId = null;
+  var customerDetailId = null;
+  var orderStatusFilter = 'all';
+  var taskView = 'list';
+  var calendarYear = 0;
+  var calendarMonth = 0;
+  var selectedCalendarDate = null;
+  var themeSnapshot = null;
+  var pendingOrderImage = '';
+
+  /* ---------------- DATA ---------------- */
+  function defaultTheme(){
+    return { accent:'#d32f2f', gradA:'#2e7d32', gradB:'#fbc02d', bgGa:'#e8f5e9', bgGb:'#fffde7' };
+  }
+  function defaultData(){
+    return { customers:[], orders:[], tasks:[], theme: defaultTheme(), sidebarLogo:'', heroLogo:'' };
+  }
+  function loadData(){
+    var raw = localStorage.getItem(STORAGE_KEY);
+    var data = null;
+    if(raw){
+      try{ data = JSON.parse(raw); }catch(e){ data = null; }
+    }
+    if(!data){ data = defaultData(); }
+    if(!data.customers) data.customers = [];
+    if(!data.orders) data.orders = [];
+    if(!data.tasks) data.tasks = [];
+    if(!data.theme) data.theme = defaultTheme();
+    if(!data.sidebarLogo) data.sidebarLogo = '';
+    if(!data.heroLogo) data.heroLogo = '';
+    return data;
+  }
+  function saveData(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+  }
+
+  /* ---------------- HELPERS ---------------- */
+  function uid(prefix){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*100000); }
+
+  function escapeHtml(str){
+    if(str===undefined || str===null) return '';
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function formatMoney(n){
+    n = parseFloat(n); if(isNaN(n)) n = 0;
+    var sign = n < 0 ? '-' : '';
+    n = Math.abs(n);
+    var fixed = n.toFixed(2);
+    var parts = fixed.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return sign + '$' + parts.join('.');
+  }
+
+  function pad2(n){ return n < 10 ? ('0'+n) : (''+n); }
+
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  }
+
+  function formatDateNice(dateStr){
+    if(!dateStr) return '—';
+    var parts = dateStr.split('-');
+    if(parts.length < 3) return dateStr;
+    var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+
+  function capitalize(s){ if(!s) return ''; return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function initials(name){
+    if(!name) return '?';
+    var parts = name.replace(/\s+/g,' ').trim().split(' ');
+    var s = parts[0].charAt(0);
+    if(parts.length > 1) s += parts[parts.length-1].charAt(0);
+    return s.toUpperCase();
+  }
+
+  function findCustomer(id){
+    for(var i=0;i<appData.customers.length;i++){ if(appData.customers[i].id===id) return appData.customers[i]; }
+    return null;
+  }
+  function findOrder(id){
+    for(var i=0;i<appData.orders.length;i++){ if(appData.orders[i].id===id) return appData.orders[i]; }
+    return null;
+  }
+  function findTask(id){
+    for(var i=0;i<appData.tasks.length;i++){ if(appData.tasks[i].id===id) return appData.tasks[i]; }
+    return null;
+  }
+  function countOrdersForCustomer(id){
+    var c = 0;
+    for(var i=0;i<appData.orders.length;i++){ if(appData.orders[i].customerId===id) c++; }
+    return c;
+  }
+
+  /* ---------------- NAVIGATION ---------------- */
+  function showPage(page){
+    currentPage = page;
+    var pages = ['dashboard','customers','orders','tasks'];
+    var i;
+    for(i=0;i<pages.length;i++){
+      var el = document.getElementById('page-'+pages[i]);
+      if(el){ el.className = (pages[i]===page) ? 'page active' : 'page'; }
+    }
+    var navBtns = document.querySelectorAll('.nav-btn[data-page]');
+    for(i=0;i<navBtns.length;i++){
+      navBtns[i].className = (navBtns[i].getAttribute('data-page')===page) ? 'nav-btn active' : 'nav-btn';
+    }
+    if(page==='dashboard') renderDashboard();
+    if(page==='customers') renderCustomers();
+    if(page==='orders') renderOrders();
+    if(page==='tasks') renderTasks();
+    window.scrollTo(0,0);
+  }
+  window.showPage = showPage;
+
+  /* ---------------- MODAL SYSTEM ---------------- */
+  function showModal(id){
+    var el = document.getElementById(id);
+    el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id){
+    var el = document.getElementById(id);
+    el.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  window.closeModal = closeModal;
+
+  function overlayClick(evt, id){
+    if(evt.target === evt.currentTarget){
+      if(id==='themeModal') cancelTheme();
+      else closeModal(id);
+    }
+  }
+  window.overlayClick = overlayClick;
+
+  /* ---------------- LOGO UPLOAD ---------------- */
+  function triggerLogoUpload(which){
+    var input = document.getElementById(which==='sidebar' ? 'sidebarLogoInput' : 'heroLogoInput');
+    input.value = '';
+    input.click();
+  }
+  window.triggerLogoUpload = triggerLogoUpload;
+
+  function handleLogoFile(input, which){
+    var file = input.files && input.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      if(which==='sidebar') appData.sidebarLogo = e.target.result;
+      else appData.heroLogo = e.target.result;
+      saveData();
+      renderSidebarLogo();
+      renderHeroLogo();
+    };
+    reader.readAsDataURL(file);
+  }
+  window.handleLogoFile = handleLogoFile;
+
+  function renderSidebarLogo(){
+    var img = document.getElementById('sidebarLogoImg');
+    var ph = document.getElementById('sidebarLogoPlaceholder');
+    if(appData.sidebarLogo){ img.src = appData.sidebarLogo; img.style.display='block'; ph.style.display='none'; }
+    else { img.style.display='none'; ph.style.display='flex'; }
+  }
+  function renderHeroLogo(){
+    var img = document.getElementById('heroLogoImg');
+    var ph = document.getElementById('heroLogoPlaceholder');
+    if(appData.heroLogo){ img.src = appData.heroLogo; img.style.display='block'; ph.style.display='none'; }
+    else { img.style.display='none'; ph.style.display='flex'; }
+  }
+
+  /* ---------------- DASHBOARD ---------------- */
+  function getGreeting(){
+    var h = new Date().getHours();
+    if(h < 12) return 'Good morning';
+    if(h < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  function renderDashboard(){
+    var greetEl = document.getElementById('heroGreeting');
+    if(greetEl) greetEl.innerHTML = getGreeting() + '!';
+    var dateEl = document.getElementById('heroDateText');
+    if(dateEl){
+      var d = new Date();
+      var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      dateEl.innerHTML = days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    }
+    renderSidebarLogo();
+    renderHeroLogo();
+    renderStats();
+    renderChart();
+    renderUpcomingTasksList();
+    renderRecentOrdersList();
+  }
+
+  function getPeriodBounds(){
+    var now = new Date();
+    return {
+      today: new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(),
+      month: new Date(now.getFullYear(), now.getMonth(), 1).getTime(),
+      year: new Date(now.getFullYear(), 0, 1).getTime()
+    };
+  }
+
+  function renderStats(){
+    var bounds = getPeriodBounds();
+    var todaySum=0, todayCount=0, monthSum=0, monthCount=0, yearSum=0, yearCount=0;
+    for(var i=0;i<appData.orders.length;i++){
+      var o = appData.orders[i];
+      var t = o.createdAt || 0;
+      var total = parseFloat(o.total) || 0;
+      if(t >= bounds.today){ todaySum += total; todayCount++; }
+      if(t >= bounds.month){ monthSum += total; monthCount++; }
+      if(t >= bounds.year){ yearSum += total; yearCount++; }
+    }
+    document.getElementById('statTodayVal').innerHTML = formatMoney(todaySum);
+    document.getElementById('statTodaySub').innerHTML = todayCount + (todayCount===1 ? ' order' : ' orders');
+    document.getElementById('statMonthVal').innerHTML = formatMoney(monthSum);
+    document.getElementById('statMonthSub').innerHTML = monthCount + (monthCount===1 ? ' order' : ' orders');
+    document.getElementById('statYearVal').innerHTML = formatMoney(yearSum);
+    document.getElementById('statYearSub').innerHTML = yearCount + (yearCount===1 ? ' order' : ' orders');
+  }
+
+  function renderChart(){
+    var barsEl = document.getElementById('chartBars');
+    var labelsEl = document.getElementById('chartLabels');
+    if(!barsEl) return;
+    var dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var now = new Date();
+    var sums = [];
+    var maxVal = 0;
+    var i, j;
+    for(i=6;i>=0;i--){
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate()-i);
+      var start = d.getTime();
+      var end = start + 24*60*60*1000;
+      var sum = 0;
+      for(j=0;j<appData.orders.length;j++){
+        var o = appData.orders[j];
+        var t = o.createdAt || 0;
+        if(t >= start && t < end) sum += parseFloat(o.total) || 0;
+      }
+      sums.push({ label: dayLabels[d.getDay()], value: sum, isToday: (i===0) });
+      if(sum > maxVal) maxVal = sum;
+    }
+    if(maxVal === 0) maxVal = 1;
+    var barsHtml = '';
+    var labelsHtml = '';
+    for(i=0;i<sums.length;i++){
+      var pct = Math.round((sums[i].value / maxVal) * 100);
+      if(pct < 3 && sums[i].value > 0) pct = 3;
+      barsHtml += '<div class="bar-col"><div class="bar-value">' + (sums[i].value > 0 ? formatMoney(sums[i].value) : '') + '</div>' +
+        '<div class="bar' + (sums[i].isToday ? ' bar-today' : '') + '" style="height:' + pct + '%"></div></div>';
+      labelsHtml += '<div class="bar-label">' + sums[i].label + '</div>';
+    }
+    barsEl.innerHTML = barsHtml;
+    labelsEl.innerHTML = labelsHtml;
+  }
+
+  function renderUpcomingTasksList(){
+    var el = document.getElementById('upcomingTasksList');
+    if(!el) return;
+    var today = todayStr();
+    var list = [];
+    for(var i=0;i<appData.tasks.length;i++){
+      var t = appData.tasks[i];
+      if(!t.done && t.dueDate >= today) list.push(t);
+    }
+    list.sort(function(a,b){ return a.dueDate < b.dueDate ? -1 : (a.dueDate > b.dueDate ? 1 : 0); });
+    list = list.slice(0,5);
+    if(list.length === 0){ el.innerHTML = '<div class="empty-state">No upcoming tasks. Enjoy the quiet.</div>'; return; }
+    var html = '';
+    for(i=0;i<list.length;i++){
+      var t2 = list[i];
+      html += '<div class="list-item"><div class="li-left"><span class="prio-dot prio-' + t2.priority + '"></span>' +
+        '<div><div class="li-title">' + escapeHtml(t2.title) + '</div><div class="li-sub">Due ' + formatDateNice(t2.dueDate) + '</div></div></div></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderRecentOrdersList(){
+    var el = document.getElementById('recentOrdersList');
+    if(!el) return;
+    var list = appData.orders.slice(0);
+    list.sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
+    list = list.slice(0,5);
+    if(list.length === 0){ el.innerHTML = '<div class="empty-state">No orders yet. Head to Orders to create one.</div>'; return; }
+    var html = '';
+    for(var i=0;i<list.length;i++){
+      var o = list[i];
+      var cust = findCustomer(o.customerId);
+      html += '<div class="list-item"><div class="li-left"><div><div class="li-title">' + escapeHtml(cust ? cust.name : 'Unknown customer') + '</div>' +
+        '<div class="li-sub">' + escapeHtml(o.description || '') + '</div></div></div>' +
+        '<div class="li-right"><div class="li-amount">' + formatMoney(o.total) + '</div>' +
+        '<span class="badge badge-' + o.status + '">' + capitalize(o.status) + '</span></div></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  /* ---------------- CUSTOMERS ---------------- */
+  function renderCustomers(){
+    var listWrap = document.getElementById('customersListView');
+    var detailWrap = document.getElementById('customerDetailView');
+    if(customerDetailId){
+      listWrap.style.display = 'none';
+      detailWrap.style.display = 'block';
+      renderCustomerDetail();
+      return;
+    }
+    listWrap.style.display = 'block';
+    detailWrap.style.display = 'none';
+
+    var searchVal = (document.getElementById('customerSearch').value || '').toLowerCase();
+    var el = document.getElementById('customersList');
+    var filtered = [];
+    var i;
+    for(i=0;i<appData.customers.length;i++){
+      var c = appData.customers[i];
+      var hay = ((c.name||'') + ' ' + (c.email||'') + ' ' + (c.phone||'')).toLowerCase();
+      if(hay.indexOf(searchVal) !== -1) filtered.push(c);
+    }
+    if(filtered.length === 0){
+      el.innerHTML = '<div class="empty-state">' + (appData.customers.length === 0 ? 'No customers yet. Tap "+ New Customer" to add your first one.' : 'No customers match your search.') + '</div>';
+      return;
+    }
+    filtered.sort(function(a,b){ return a.name.localeCompare(b.name); });
+    var html = '';
+    for(i=0;i<filtered.length;i++){
+      var cu = filtered[i];
+      var orderCount = countOrdersForCustomer(cu.id);
+      html += '<div class="customer-card" onclick="openCustomerDetail(\'' + cu.id + '\')">' +
+        '<div class="avatar-circle">' + escapeHtml(initials(cu.name)) + '</div>' +
+        '<div class="customer-card-info"><div class="cc-name">' + escapeHtml(cu.name) + '</div>' +
+        '<div class="cc-sub">' + escapeHtml(cu.email || cu.phone || 'No contact info') + '</div>' +
+        '<div class="cc-meta">' + orderCount + (orderCount===1 ? ' order' : ' orders') + '</div></div>' +
+        '<div class="chev">&rsaquo;</div></div>';
+    }
+    el.innerHTML = html;
+  }
+  window.renderCustomers = renderCustomers;
+
+  function openCustomerDetail(id){ customerDetailId = id; renderCustomers(); }
+  window.openCustomerDetail = openCustomerDetail;
+  function closeCustomerDetail(){ customerDetailId = null; renderCustomers(); }
+  window.closeCustomerDetail = closeCustomerDetail;
+
+  function renderCustomerDetail(){
+    var c = findCustomer(customerDetailId);
+    var el = document.getElementById('customerDetailContent');
+    if(!c){ el.innerHTML = '<div class="empty-state">Customer not found.</div>'; return; }
+    var custOrders = [];
+    var i;
+    for(i=0;i<appData.orders.length;i++){ if(appData.orders[i].customerId === c.id) custOrders.push(appData.orders[i]); }
+    custOrders.sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
+    var ordersHtml = '';
+    if(custOrders.length === 0){
+      ordersHtml = '<div class="empty-state">No orders for this customer yet.</div>';
+    } else {
+      for(i=0;i<custOrders.length;i++){
+        var o = custOrders[i];
+        ordersHtml += '<div class="list-item" style="cursor:pointer" onclick="openOrderModal(\'' + o.id + '\')"><div class="li-left"><div><div class="li-title">' +
+          escapeHtml(o.description || 'Order') + '</div><div class="li-sub">Due ' + formatDateNice(o.dueDate) + '</div></div></div>' +
+          '<div class="li-right"><div class="li-amount">' + formatMoney(o.total) + '</div>' +
+          '<span class="badge badge-' + o.status + '">' + capitalize(o.status) + '</span></div></div>';
+      }
+    }
+    el.innerHTML =
+      '<div class="detail-header"><div class="avatar-circle avatar-lg">' + escapeHtml(initials(c.name)) + '</div>' +
+      '<div><div class="detail-name">' + escapeHtml(c.name) + '</div>' +
+      (c.email ? '<div class="detail-sub">' + escapeHtml(c.email) + '</div>' : '') +
+      (c.phone ? '<div class="detail-sub">' + escapeHtml(c.phone) + '</div>' : '') +
+      '</div></div>' +
+      (c.notes ? '<div class="detail-notes">' + escapeHtml(c.notes) + '</div>' : '') +
+      '<div class="detail-actions">' +
+      '<button class="btn btn-secondary" onclick="openCustomerModal(\'' + c.id + '\')">Edit</button>' +
+      '<button class="btn btn-danger" onclick="deleteCustomer(\'' + c.id + '\')">Delete</button>' +
+      '<button class="btn btn-primary" onclick="openOrderModal(null,\'' + c.id + '\')">+ New Order</button>' +
+      '</div>' +
+      '<div class="section-subtitle">Orders</div>' + ordersHtml;
+  }
+
+  function openCustomerModal(id){
+    editingCustomerId = id;
+    var c = id ? findCustomer(id) : null;
+    document.getElementById('customerModalTitle').innerHTML = id ? 'Edit Customer' : 'New Customer';
+    document.getElementById('customerNameInput').value = c ? c.name : '';
+    document.getElementById('customerEmailInput').value = c ? c.email : '';
+    document.getElementById('customerPhoneInput').value = c ? c.phone : '';
+    document.getElementById('customerNotesInput').value = c ? c.notes : '';
+    document.getElementById('customerDeleteBtn').style.display = id ? 'inline-block' : 'none';
+    showModal('customerModal');
+  }
+  window.openCustomerModal = openCustomerModal;
+
+  function saveCustomer(){
+    var name = document.getElementById('customerNameInput').value.replace(/^\s+|\s+$/g,'');
+    if(!name){ alert('Please enter a name.'); return; }
+    var email = document.getElementById('customerEmailInput').value.replace(/^\s+|\s+$/g,'');
+    var phone = document.getElementById('customerPhoneInput').value.replace(/^\s+|\s+$/g,'');
+    var notes = document.getElementById('customerNotesInput').value.replace(/^\s+|\s+$/g,'');
+    if(editingCustomerId){
+      var c = findCustomer(editingCustomerId);
+      c.name = name; c.email = email; c.phone = phone; c.notes = notes;
+    } else {
+      appData.customers.push({ id: uid('cust'), name: name, email: email, phone: phone, notes: notes, createdAt: Date.now() });
+    }
+    saveData();
+    closeModal('customerModal');
+    renderCustomers();
+    renderDashboard();
+  }
+  window.saveCustomer = saveCustomer;
+
+  function deleteCustomer(id){
+    var orderCount = countOrdersForCustomer(id);
+    var msg = orderCount > 0 ? ('This customer has ' + orderCount + ' order(s). Deleting will also delete those orders. Continue?') : 'Delete this customer?';
+    if(!confirm(msg)) return;
+    appData.customers = appData.customers.filter(function(c){ return c.id !== id; });
+    appData.orders = appData.orders.filter(function(o){ return o.customerId !== id; });
+    saveData();
+    closeModal('customerModal');
+    customerDetailId = null;
+    renderCustomers();
+    renderDashboard();
+    renderOrders();
+  }
+  window.deleteCustomer = deleteCustomer;
+
+  /* ---------------- ORDERS ---------------- */
+  function renderOrders(){
+    var el = document.getElementById('ordersList');
+    var filtered = appData.orders.slice(0);
+    if(orderStatusFilter !== 'all'){
+      filtered = filtered.filter(function(o){ return o.status === orderStatusFilter; });
+    }
+    filtered.sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); });
+    if(filtered.length === 0){
+      el.innerHTML = '<div class="empty-state">' + (appData.orders.length === 0 ? 'No orders yet. Tap "+ New Order" to create one.' : 'No orders with this status.') + '</div>';
+      return;
+    }
+    var html = '';
+    for(var i=0;i<filtered.length;i++){
+      var o = filtered[i];
+      var cust = findCustomer(o.customerId);
+      html += '<div class="order-card" onclick="openOrderModal(\'' + o.id + '\')">' +
+        '<div class="order-thumb">' + (o.image ? '<img src="' + o.image + '">' : '<span class="thumb-placeholder">🎨</span>') + '</div>' +
+        '<div class="order-info"><div class="oi-top"><span class="oi-customer">' + escapeHtml(cust ? cust.name : 'Unknown') + '</span>' +
+        '<span class="badge badge-' + o.status + '">' + capitalize(o.status) + '</span></div>' +
+        '<div class="oi-desc">' + escapeHtml(o.description || '') + '</div>' +
+        '<div class="oi-bottom"><span class="oi-amount">' + formatMoney(o.paid) + ' / ' + formatMoney(o.total) + '</span>' +
+        '<span class="oi-due">Due ' + formatDateNice(o.dueDate) + '</span></div></div></div>';
+    }
+    el.innerHTML = html;
+  }
+  window.renderOrders = renderOrders;
+
+  function setOrderFilter(status, btn){
+    orderStatusFilter = status;
+    var btns = document.querySelectorAll('.filter-tab');
+    for(var i=0;i<btns.length;i++) btns[i].className = 'filter-tab';
+    btn.className = 'filter-tab active';
+    renderOrders();
+  }
+  window.setOrderFilter = setOrderFilter;
+
+  function populateCustomerSelect(selectedId){
+    var sel = document.getElementById('orderCustomerSelect');
+    var html = '';
+    if(appData.customers.length === 0){
+      html = '<option value="">No customers — add one first</option>';
+    } else {
+      html += '<option value="">Select a customer…</option>';
+      var sorted = appData.customers.slice(0).sort(function(a,b){ return a.name.localeCompare(b.name); });
+      for(var i=0;i<sorted.length;i++){
+        html += '<option value="' + sorted[i].id + '"' + (sorted[i].id === selectedId ? ' selected' : '') + '>' + escapeHtml(sorted[i].name) + '</option>';
+      }
+    }
+    sel.innerHTML = html;
+  }
+
+  function openOrderModal(id, prefillCustomerId){
+    editingOrderId = id;
+    var o = id ? findOrder(id) : null;
+    document.getElementById('orderModalTitle').innerHTML = id ? 'Edit Order' : 'New Order';
+    populateCustomerSelect(o ? o.customerId : prefillCustomerId);
+    document.getElementById('orderDescInput').value = o ? o.description : '';
+    document.getElementById('orderTotalInput').value = o ? o.total : '';
+    document.getElementById('orderPaidInput').value = o ? o.paid : '';
+    document.getElementById('orderStatusInput').value = o ? o.status : 'pending';
+    document.getElementById('orderDueInput').value = o ? o.dueDate : '';
+    pendingOrderImage = (o && o.image) ? o.image : '';
+    updateOrderImagePreview();
+    document.getElementById('orderDeleteBtn').style.display = id ? 'inline-block' : 'none';
+    showModal('orderModal');
+  }
+  window.openOrderModal = openOrderModal;
+
+  function triggerOrderImageUpload(){ document.getElementById('orderImageInput').click(); }
+  window.triggerOrderImageUpload = triggerOrderImageUpload;
+
+  function handleOrderImageFile(input){
+    var file = input.files && input.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      pendingOrderImage = e.target.result;
+      updateOrderImagePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+  window.handleOrderImageFile = handleOrderImageFile;
+
+  function updateOrderImagePreview(){
+    var zone = document.getElementById('orderImageZone');
+    if(pendingOrderImage){
+      zone.innerHTML = '<img src="' + pendingOrderImage + '" class="upload-preview-img">' +
+        '<button type="button" class="remove-image-btn" onclick="removeOrderImage(event)">✕</button>';
+    } else {
+      zone.innerHTML = '<div class="upload-icon">📷</div><div class="upload-hint">Tap to add a reference image</div>';
+    }
+  }
+
+  function removeOrderImage(evt){
+    if(evt) evt.stopPropagation();
+    pendingOrderImage = '';
+    updateOrderImagePreview();
+  }
+  window.removeOrderImage = removeOrderImage;
+
+  function autoSuggestOrderStatus(){
+    var total = parseFloat(document.getElementById('orderTotalInput').value) || 0;
+    var paid = parseFloat(document.getElementById('orderPaidInput').value) || 0;
+    var due = document.getElementById('orderDueInput').value;
+    var statusSel = document.getElementById('orderStatusInput');
+    var newStatus;
+    if(total > 0 && paid >= total) newStatus = 'paid';
+    else if(paid > 0) newStatus = 'partial';
+    else newStatus = 'pending';
+    if(newStatus !== 'paid' && due && due < todayStr()) newStatus = 'overdue';
+    statusSel.value = newStatus;
+  }
+  window.autoSuggestOrderStatus = autoSuggestOrderStatus;
+
+  function saveOrder(){
+    var customerId = document.getElementById('orderCustomerSelect').value;
+    if(!customerId){ alert('Please select a customer.'); return; }
+    var description = document.getElementById('orderDescInput').value.replace(/^\s+|\s+$/g,'');
+    var total = parseFloat(document.getElementById('orderTotalInput').value) || 0;
+    var paid = parseFloat(document.getElementById('orderPaidInput').value) || 0;
+    var status = document.getElementById('orderStatusInput').value;
+    var dueDate = document.getElementById('orderDueInput').value;
+    if(editingOrderId){
+      var o = findOrder(editingOrderId);
+      o.customerId = customerId; o.description = description; o.total = total; o.paid = paid;
+      o.status = status; o.dueDate = dueDate; o.image = pendingOrderImage;
+    } else {
+      appData.orders.push({
+        id: uid('ord'), customerId: customerId, description: description, total: total, paid: paid,
+        status: status, dueDate: dueDate, image: pendingOrderImage, createdAt: Date.now()
+      });
+    }
+    saveData();
+    closeModal('orderModal');
+    renderOrders();
+    renderDashboard();
+    if(customerDetailId) renderCustomerDetail();
+  }
+  window.saveOrder = saveOrder;
+
+  function deleteOrder(id){
+    if(!confirm('Delete this order?')) return;
+    appData.orders = appData.orders.filter(function(o){ return o.id !== id; });
+    saveData();
+    closeModal('orderModal');
+    renderOrders();
+    renderDashboard();
+    if(customerDetailId) renderCustomerDetail();
+  }
+  window.deleteOrder = deleteOrder;
+
+  /* ---------------- TASKS ---------------- */
+  function setTaskView(view, btn){
+    taskView = view;
+    document.getElementById('taskListView').style.display = (view === 'list') ? 'block' : 'none';
+    document.getElementById('taskCalendarView').style.display = (view === 'calendar') ? 'block' : 'none';
+    var btns = document.querySelectorAll('.view-tab');
+    for(var i=0;i<btns.length;i++) btns[i].className = 'view-tab';
+    btn.className = 'view-tab active';
+    if(view === 'calendar') renderCalendar(); else renderTaskList();
+  }
+  window.setTaskView = setTaskView;
+
+  function renderTasks(){
+    if(taskView === 'calendar') renderCalendar(); else renderTaskList();
+  }
+
+  function renderTaskList(){
+    var el = document.getElementById('taskListItems');
+    var list = appData.tasks.slice(0);
+    list.sort(function(a,b){
+      if(a.done !== b.done) return a.done ? 1 : -1;
+      return a.dueDate < b.dueDate ? -1 : (a.dueDate > b.dueDate ? 1 : 0);
+    });
+    if(list.length === 0){ el.innerHTML = '<div class="empty-state">No tasks yet. Tap "+ New Task" to add one.</div>'; return; }
+    var html = '';
+    for(var i=0;i<list.length;i++){
+      var t = list[i];
+      html += '<div class="list-item task-item' + (t.done ? ' task-done' : '') + '">' +
+        '<div class="li-left" style="cursor:pointer" onclick="toggleTaskDone(\'' + t.id + '\')">' +
+        '<span class="check-circle' + (t.done ? ' checked' : '') + '">' + (t.done ? '&#10003;' : '') + '</span>' +
+        '<span class="prio-dot prio-' + t.priority + '"></span>' +
+        '<div><div class="li-title">' + escapeHtml(t.title) + '</div><div class="li-sub">Due ' + formatDateNice(t.dueDate) + '</div></div>' +
+        '</div>' +
+        '<div class="li-right"><button class="btn btn-small btn-secondary" onclick="openTaskModal(\'' + t.id + '\')">Edit</button></div>' +
+        '</div>';
+    }
+    el.innerHTML = html;
+  }
+  window.renderTaskList = renderTaskList;
+
+  function toggleTaskDone(id){
+    var t = findTask(id);
+    if(t){
+      t.done = !t.done;
+      saveData();
+      renderTaskList();
+      renderDashboard();
+      if(taskView === 'calendar') renderCalendar();
+    }
+  }
+  window.toggleTaskDone = toggleTaskDone;
+
+  function renderCalendar(){
+    var el = document.getElementById('calendarGrid');
+    var label = document.getElementById('calendarMonthLabel');
+    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    label.innerHTML = months[calendarMonth] + ' ' + calendarYear;
+    var firstDay = new Date(calendarYear, calendarMonth, 1);
+    var startWeekday = firstDay.getDay();
+    var daysInMonth = new Date(calendarYear, calendarMonth+1, 0).getDate();
+    var weekdayNames = ['S','M','T','W','T','F','S'];
+    var html = '';
+    var w, i;
+    for(w=0;w<7;w++) html += '<div class="cal-weekday">' + weekdayNames[w] + '</div>';
+    for(i=0;i<startWeekday;i++) html += '<div class="cal-cell cal-empty"></div>';
+    var today = todayStr();
+    for(var day=1; day<=daysInMonth; day++){
+      var dateStr = calendarYear + '-' + pad2(calendarMonth+1) + '-' + pad2(day);
+      var dayTasks = appData.tasks.filter(function(t){ return t.dueDate === dateStr; });
+      var dotsHtml = '';
+      var maxDots = 3;
+      for(i=0;i<Math.min(dayTasks.length,maxDots);i++){
+        dotsHtml += '<span class="cal-dot prio-' + dayTasks[i].priority + '"></span>';
+      }
+      if(dayTasks.length > maxDots) dotsHtml += '<span class="cal-more">+' + (dayTasks.length - maxDots) + '</span>';
+      var classes = 'cal-cell';
+      if(dateStr === today) classes += ' cal-today';
+      if(dateStr === selectedCalendarDate) classes += ' cal-selected';
+      html += '<div class="' + classes + '" onclick="selectCalendarDate(\'' + dateStr + '\')">' +
+        '<div class="cal-daynum">' + day + '</div><div class="cal-dots">' + dotsHtml + '</div></div>';
+    }
+    el.innerHTML = html;
+    renderCalendarDayPanel();
+  }
+  window.renderCalendar = renderCalendar;
+
+  function calendarPrevMonth(){
+    calendarMonth--;
+    if(calendarMonth < 0){ calendarMonth = 11; calendarYear--; }
+    renderCalendar();
+  }
+  window.calendarPrevMonth = calendarPrevMonth;
+
+  function calendarNextMonth(){
+    calendarMonth++;
+    if(calendarMonth > 11){ calendarMonth = 0; calendarYear++; }
+    renderCalendar();
+  }
+  window.calendarNextMonth = calendarNextMonth;
+
+  function selectCalendarDate(dateStr){
+    selectedCalendarDate = dateStr;
+    renderCalendar();
+  }
+  window.selectCalendarDate = selectCalendarDate;
+
+  function renderCalendarDayPanel(){
+    var panel = document.getElementById('calendarDayPanel');
+    if(!selectedCalendarDate){ panel.innerHTML = ''; return; }
+    var dayTasks = appData.tasks.filter(function(t){ return t.dueDate === selectedCalendarDate; });
+    var html = '<div class="cal-panel-header"><span>' + formatDateNice(selectedCalendarDate) + '</span>' +
+      '<button class="btn btn-small btn-primary" onclick="openTaskModal(null,\'' + selectedCalendarDate + '\')">+ Add Task</button></div>';
+    if(dayTasks.length === 0){
+      html += '<div class="empty-state">No tasks on this day.</div>';
+    } else {
+      for(var i=0;i<dayTasks.length;i++){
+        var t = dayTasks[i];
+        html += '<div class="list-item task-item' + (t.done ? ' task-done' : '') + '">' +
+          '<div class="li-left" style="cursor:pointer" onclick="toggleTaskDone(\'' + t.id + '\')">' +
+          '<span class="check-circle' + (t.done ? ' checked' : '') + '">' + (t.done ? '&#10003;' : '') + '</span>' +
+          '<span class="prio-dot prio-' + t.priority + '"></span>' +
+          '<div class="li-title">' + escapeHtml(t.title) + '</div></div>' +
+          '<div class="li-right"><button class="btn btn-small btn-secondary" onclick="openTaskModal(\'' + t.id + '\')">Edit</button></div>' +
+          '</div>';
+      }
+    }
+    panel.innerHTML = html;
+  }
+
+  function openTaskModal(id, prefillDate){
+    editingTaskId = id;
+    var t = id ? findTask(id) : null;
+    document.getElementById('taskModalTitle').innerHTML = id ? 'Edit Task' : 'New Task';
+    document.getElementById('taskTitleInput').value = t ? t.title : '';
+    document.getElementById('taskNotesInput').value = t ? t.notes : '';
+    document.getElementById('taskPriorityInput').value = t ? t.priority : 'medium';
+    document.getElementById('taskDueInput').value = t ? t.dueDate : (prefillDate || todayStr());
+    document.getElementById('taskDeleteBtn').style.display = id ? 'inline-block' : 'none';
+    showModal('taskModal');
+  }
+  window.openTaskModal = openTaskModal;
+
+  function saveTask(){
+    var title = document.getElementById('taskTitleInput').value.replace(/^\s+|\s+$/g,'');
+    if(!title){ alert('Please enter a task title.'); return; }
+    var notes = document.getElementById('taskNotesInput').value.replace(/^\s+|\s+$/g,'');
+    var priority = document.getElementById('taskPriorityInput').value;
+    var dueDate = document.getElementById('taskDueInput').value || todayStr();
+    if(editingTaskId){
+      var t = findTask(editingTaskId);
+      t.title = title; t.notes = notes; t.priority = priority; t.dueDate = dueDate;
+    } else {
+      appData.tasks.push({ id: uid('task'), title: title, notes: notes, priority: priority, dueDate: dueDate, done: false, createdAt: Date.now() });
+    }
+    saveData();
+    closeModal('taskModal');
+    renderTaskList();
+    if(taskView === 'calendar') renderCalendar();
+    renderDashboard();
+  }
+  window.saveTask = saveTask;
+
+  function deleteTask(id){
+    if(!confirm('Delete this task?')) return;
+    appData.tasks = appData.tasks.filter(function(t){ return t.id !== id; });
+    saveData();
+    closeModal('taskModal');
+    renderTaskList();
+    if(taskView === 'calendar') renderCalendar();
+    renderDashboard();
+  }
+  window.deleteTask = deleteTask;
+
+  /* ---------------- THEME ---------------- */
+  function getPresets(){
+    return {
+      harvest:  { accent:'#d32f2f', gradA:'#2e7d32', gradB:'#fbc02d', bgGa:'#e8f5e9', bgGb:'#fffde7' },
+      tomato:   { accent:'#c62828', gradA:'#ef5350', gradB:'#ffca28', bgGa:'#fdecea', bgGb:'#fff8e1' },
+      citrus:   { accent:'#f57f17', gradA:'#fdd835', gradB:'#66bb6a', bgGa:'#fffde7', bgGb:'#f1f8e9' },
+      vineyard: { accent:'#b71c1c', gradA:'#1b5e20', gradB:'#f9a825', bgGa:'#f1f8e9', bgGb:'#fff3e0' }
+    };
+  }
+
+  function applyThemeVars(t){
+    var r = document.documentElement.style;
+    r.setProperty('--accent', t.accent);
+    r.setProperty('--grad-a', t.gradA);
+    r.setProperty('--grad-b', t.gradB);
+    r.setProperty('--bg-ga', t.bgGa);
+    r.setProperty('--bg-gb', t.bgGb);
+  }
+
+  function updateHexLabels(){
+    document.getElementById('accentHexLabel').innerHTML = document.getElementById('accentColorInput').value;
+    document.getElementById('gradAHexLabel').innerHTML = document.getElementById('gradAInput').value;
+    document.getElementById('gradBHexLabel').innerHTML = document.getElementById('gradBInput').value;
+    document.getElementById('bgGaHexLabel').innerHTML = document.getElementById('bgGaInput').value;
+    document.getElementById('bgGbHexLabel').innerHTML = document.getElementById('bgGbInput').value;
+  }
+
+  function updateThemePreviewBox(t){
+    var hero = document.getElementById('themePreviewHero');
+    var btn = document.getElementById('themePreviewBtn');
+    var badge = document.getElementById('themePreviewBadge');
+    hero.style.background = 'linear-gradient(135deg,' + t.gradA + ',' + t.gradB + ')';
+    btn.style.background = t.accent;
+    badge.style.background = t.gradA;
+    badge.style.color = '#fff';
+  }
+
+  function currentThemeFromInputs(){
+    return {
+      accent: document.getElementById('accentColorInput').value,
+      gradA: document.getElementById('gradAInput').value,
+      gradB: document.getElementById('gradBInput').value,
+      bgGa: document.getElementById('bgGaInput').value,
+      bgGb: document.getElementById('bgGbInput').value
+    };
+  }
+
+  function previewTheme(){
+    var t = currentThemeFromInputs();
+    applyThemeVars(t);
+    updateHexLabels();
+    updateThemePreviewBox(t);
+  }
+  window.previewTheme = previewTheme;
+
+  function applyPreset(name){
+    var p = getPresets()[name];
+    if(!p) return;
+    document.getElementById('accentColorInput').value = p.accent;
+    document.getElementById('gradAInput').value = p.gradA;
+    document.getElementById('gradBInput').value = p.gradB;
+    document.getElementById('bgGaInput').value = p.bgGa;
+    document.getElementById('bgGbInput').value = p.bgGb;
+    previewTheme();
+  }
+  window.applyPreset = applyPreset;
+
+  function openThemeModal(){
+    themeSnapshot = JSON.parse(JSON.stringify(appData.theme));
+    document.getElementById('accentColorInput').value = appData.theme.accent;
+    document.getElementById('gradAInput').value = appData.theme.gradA;
+    document.getElementById('gradBInput').value = appData.theme.gradB;
+    document.getElementById('bgGaInput').value = appData.theme.bgGa;
+    document.getElementById('bgGbInput').value = appData.theme.bgGb;
+    previewTheme();
+    showModal('themeModal');
+  }
+  window.openThemeModal = openThemeModal;
+
+  function saveTheme(){
+    appData.theme = currentThemeFromInputs();
+    saveData();
+    applyThemeVars(appData.theme);
+    closeModal('themeModal');
+  }
+  window.saveTheme = saveTheme;
+
+  function cancelTheme(){
+    if(themeSnapshot) applyThemeVars(themeSnapshot);
+    closeModal('themeModal');
+  }
+  window.cancelTheme = cancelTheme;
+
+  function resetThemeDefault(){
+    var d = defaultTheme();
+    document.getElementById('accentColorInput').value = d.accent;
+    document.getElementById('gradAInput').value = d.gradA;
+    document.getElementById('gradBInput').value = d.gradB;
+    document.getElementById('bgGaInput').value = d.bgGa;
+    document.getElementById('bgGbInput').value = d.bgGb;
+    previewTheme();
+  }
+  window.resetThemeDefault = resetThemeDefault;
+
+  /* ---------------- INIT ---------------- */
+  function initApp(){
+    appData = loadData();
+    applyThemeVars(appData.theme);
+    var now = new Date();
+    calendarYear = now.getFullYear();
+    calendarMonth = now.getMonth();
+    selectedCalendarDate = todayStr();
+    showPage('dashboard');
+  }
+
+  document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
