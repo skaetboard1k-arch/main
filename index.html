@@ -735,7 +735,41 @@
     return data;
   }
   function saveData(){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      return true;
+    }catch(e){
+      alert('Could not save your changes — device storage is full. Try removing an old reference image or logo, then try again.');
+      return false;
+    }
+  }
+
+  function downscaleImage(file, maxDim, quality, callback){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          if(w >= h){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else { w = Math.round(w * (maxDim / h)); h = maxDim; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        var dataUrl;
+        try{ dataUrl = canvas.toDataURL('image/jpeg', quality); }
+        catch(err){ dataUrl = e.target.result; }
+        callback(dataUrl);
+      };
+      img.onerror = function(){ callback(e.target.result); };
+      img.src = e.target.result;
+    };
+    reader.onerror = function(){ callback(null); };
+    reader.readAsDataURL(file);
   }
 
   /* ---------------- HELPERS ---------------- */
@@ -855,15 +889,14 @@
   function handleLogoFile(input, which){
     var file = input.files && input.files[0];
     if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(e){
-      if(which==='sidebar') appData.sidebarLogo = e.target.result;
-      else appData.heroLogo = e.target.result;
+    downscaleImage(file, 480, 0.85, function(dataUrl){
+      if(!dataUrl) return;
+      if(which==='sidebar') appData.sidebarLogo = dataUrl;
+      else appData.heroLogo = dataUrl;
       saveData();
       renderSidebarLogo();
       renderHeroLogo();
-    };
-    reader.readAsDataURL(file);
+    });
   }
   window.handleLogoFile = handleLogoFile;
 
@@ -1214,12 +1247,11 @@
   function handleOrderImageFile(input){
     var file = input.files && input.files[0];
     if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(e){
-      pendingOrderImage = e.target.result;
+    downscaleImage(file, 1000, 0.82, function(dataUrl){
+      if(!dataUrl) return;
+      pendingOrderImage = dataUrl;
       updateOrderImagePreview();
-    };
-    reader.readAsDataURL(file);
+    });
   }
   window.handleOrderImageFile = handleOrderImageFile;
 
