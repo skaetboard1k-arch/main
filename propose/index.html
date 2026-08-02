@@ -4,19 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>For Royce</title>
-<meta name="theme-color" content="#c2185b">
+<meta name="theme-color" content="#000000">
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     margin: 0; padding: 0; height: 100%;
     overflow: hidden;
     font-family: Georgia, 'Times New Roman', serif;
-    background: linear-gradient(160deg, #3a0f1f, #7a1b3a 45%, #c2185b 100%);
-    color: #fff0f3;
+    background: radial-gradient(circle at 50% 15%, #140007 0%, #000000 65%);
+    color: #ffffff;
   }
   #app { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
 
-  /* floating hearts background */
+  /* floating hearts + lilies background */
   #hearts { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
   .heart {
     position: absolute;
@@ -26,6 +26,8 @@
     animation: floatUp linear forwards;
     filter: drop-shadow(0 0 6px rgba(255,105,135,0.35));
   }
+  .heart.lily { filter: drop-shadow(0 0 6px rgba(255,255,255,0.35)); }
+  .heart.lily svg { width: 1em; height: 1em; display: block; }
   @keyframes floatUp {
     0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
     10%  { opacity: 0.6; }
@@ -161,6 +163,56 @@
   .celebrate .heart-icon { font-size: 60px; }
   .celebrate .title { margin-bottom: 6px; }
   .celebrate .subtitle { font-style: normal; }
+  .celebrate-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 22px; }
+
+  /* ---------- memories ---------- */
+  #scene-memories { justify-content: flex-start; padding-top: 60px; overflow-y: auto; }
+  .memories-wrap { width: 100%; max-width: 460px; padding-bottom: 40px; }
+  .memory-form {
+    display: flex; flex-direction: column; gap: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 26px;
+    text-align: left;
+  }
+  .memory-form label { font-size: 13px; opacity: 0.75; letter-spacing: 0.5px; text-transform: uppercase; }
+  .memory-form input[type="text"],
+  .memory-form input[type="date"],
+  .memory-form textarea {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #fff;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .memory-form input[type="file"] { color: #fff; font-size: 13px; }
+  .memory-cards { display: flex; flex-direction: column; gap: 16px; }
+  .memory-card {
+    position: relative;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    text-align: left;
+  }
+  .memory-card img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+  .memory-card .memory-body { padding: 12px 14px; }
+  .memory-card .memory-date { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+  .memory-card .memory-note { font-size: 15px; line-height: 1.5; }
+  .memory-delete {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.4);
+    color: #fff; font-size: 15px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .memories-empty { opacity: 0.6; font-style: italic; margin-top: 10px; }
+  .back-link { margin-top: 6px; margin-bottom: 18px; }
 
   canvas#confetti { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
 
@@ -227,6 +279,36 @@
     <div class="heart-icon">🎉</div>
     <h1 class="title" id="celebrateTitle">She said yes!</h1>
     <p class="subtitle" id="celebrateSubtitle">Best answer I've ever gotten. I love you, Royce.</p>
+    <div class="celebrate-actions">
+      <button class="btn solid" onclick="location.hash='memories'">Add memories together</button>
+    </div>
+  </section>
+
+  <!-- Scene 7: Memories -->
+  <section class="scene" id="scene-memories">
+    <div class="memories-wrap">
+      <div class="back-link">
+        <button class="btn" onclick="goTo('celebrate')">‹ Back</button>
+      </div>
+      <h1 class="title" style="font-size:clamp(24px,7vw,34px);">Our Memories</h1>
+      <p class="subtitle">Every moment from here, kept in one place.</p>
+
+      <form class="memory-form" id="memoryForm">
+        <label for="memoryDate">Date</label>
+        <input type="date" id="memoryDate">
+
+        <label for="memoryNote">What happened</label>
+        <textarea id="memoryNote" rows="3" placeholder="Tell the story..." required></textarea>
+
+        <label for="memoryPhoto">Photo (optional)</label>
+        <input type="file" id="memoryPhoto" accept="image/*">
+
+        <button type="submit" class="btn solid" style="margin-top:6px;">Add memory</button>
+      </form>
+
+      <div class="memory-cards" id="memoryCards"></div>
+      <p class="memories-empty" id="memoriesEmpty">No memories added yet — start with your first one above.</p>
+    </div>
   </section>
 </div>
 
@@ -265,13 +347,30 @@ const BUILDUP_LINES = [
 
 document.title = "For " + NAME;
 
-/* ---------- floating hearts background ---------- */
+/* ---------- floating hearts + lilies background ---------- */
 const heartsWrap = document.getElementById('hearts');
 const heartEmojis = ['♥','❤','💗','💕'];
+const LILY_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <g fill="rgba(255,255,255,0.9)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5">
+    <ellipse cx="50" cy="26" rx="9" ry="21" transform="rotate(0 50 50)"/>
+    <ellipse cx="50" cy="26" rx="9" ry="21" transform="rotate(60 50 50)"/>
+    <ellipse cx="50" cy="26" rx="9" ry="21" transform="rotate(120 50 50)"/>
+    <ellipse cx="50" cy="26" rx="9" ry="21" transform="rotate(180 50 50)"/>
+    <ellipse cx="50" cy="26" rx="9" ry="21" transform="rotate(240 50 50)"/>
+    <ellipse cx="50" cy="26" rx="9" ry="21" transform="rotate(300 50 50)"/>
+  </g>
+  <circle cx="50" cy="50" r="6" fill="#ffd54f"/>
+</svg>`;
+
 function spawnHeart() {
   const el = document.createElement('div');
-  el.className = 'heart';
-  el.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+  const isLily = Math.random() < 0.4;
+  el.className = 'heart' + (isLily ? ' lily' : '');
+  if (isLily) {
+    el.innerHTML = LILY_SVG;
+  } else {
+    el.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+  }
   const left = Math.random() * 100;
   const size = 14 + Math.random() * 22;
   const duration = 7 + Math.random() * 6;
@@ -302,12 +401,19 @@ function goTo(name) {
 
   const idx = SCENES.indexOf(name);
   [...progressEl.children].forEach((d, i) => d.classList.toggle('done', i <= idx));
-  progressEl.style.display = (name === 'intro' || name === 'celebrate') ? 'none' : 'flex';
+  progressEl.style.display = (name === 'intro' || name === 'celebrate' || name === 'memories') ? 'none' : 'flex';
 
   if (name === 'poem') startPoem();
   if (name === 'buildup') startBuildup();
 }
 progressEl.style.display = 'none';
+
+if (location.hash === '#memories') {
+  goTo('memories');
+}
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#memories') goTo('memories');
+});
 
 /* ---------- poem reveal ---------- */
 let poemStarted = false;
@@ -473,6 +579,148 @@ function animateConfetti() {
   if (alive) requestAnimationFrame(animateConfetti);
   else ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
+
+/* ---------- memories ---------- */
+const MEMORIES_KEY = 'royceMemories';
+
+function loadMemories() {
+  try {
+    return JSON.parse(localStorage.getItem(MEMORIES_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveMemories(list) {
+  try {
+    localStorage.setItem(MEMORIES_KEY, JSON.stringify(list));
+    return true;
+  } catch (e) {
+    alert("Couldn't save that memory (storage is full). Try a smaller photo or fewer photos.");
+    return false;
+  }
+}
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const maxDim = 1000;
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const cctx = canvas.getContext('2d');
+        cctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatMemoryDate(value) {
+  if (!value) return '';
+  const d = new Date(value + 'T00:00:00');
+  if (isNaN(d.getTime())) return value;
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+const memoryCardsEl = document.getElementById('memoryCards');
+const memoriesEmptyEl = document.getElementById('memoriesEmpty');
+
+function renderMemories() {
+  const memories = loadMemories();
+  memoryCardsEl.innerHTML = '';
+  memoriesEmptyEl.style.display = memories.length ? 'none' : 'block';
+
+  memories
+    .slice()
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .forEach(mem => {
+      const card = document.createElement('div');
+      card.className = 'memory-card';
+
+      if (mem.photo) {
+        const img = document.createElement('img');
+        img.src = mem.photo;
+        card.appendChild(img);
+      }
+
+      const body = document.createElement('div');
+      body.className = 'memory-body';
+      if (mem.date) {
+        const dateEl = document.createElement('div');
+        dateEl.className = 'memory-date';
+        dateEl.textContent = formatMemoryDate(mem.date);
+        body.appendChild(dateEl);
+      }
+      const noteEl = document.createElement('div');
+      noteEl.className = 'memory-note';
+      noteEl.textContent = mem.note;
+      body.appendChild(noteEl);
+      card.appendChild(body);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'memory-delete';
+      delBtn.type = 'button';
+      delBtn.textContent = '×';
+      delBtn.onclick = () => {
+        const remaining = loadMemories().filter(m => m.id !== mem.id);
+        saveMemories(remaining);
+        renderMemories();
+      };
+      card.appendChild(delBtn);
+
+      memoryCardsEl.appendChild(card);
+    });
+}
+renderMemories();
+
+document.getElementById('memoryForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const dateInput = document.getElementById('memoryDate');
+  const noteInput = document.getElementById('memoryNote');
+  const photoInput = document.getElementById('memoryPhoto');
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+
+  const note = noteInput.value.trim();
+  if (!note) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Adding…';
+
+  let photo = null;
+  if (photoInput.files && photoInput.files[0]) {
+    try {
+      photo = await compressImage(photoInput.files[0]);
+    } catch (e) {
+      photo = null;
+    }
+  }
+
+  const memories = loadMemories();
+  memories.push({
+    id: Date.now() + '-' + Math.random().toString(36).slice(2),
+    date: dateInput.value,
+    note,
+    photo,
+    createdAt: Date.now()
+  });
+
+  if (saveMemories(memories)) {
+    e.target.reset();
+    renderMemories();
+  }
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Add memory';
+});
 </script>
 </body>
 </html>
