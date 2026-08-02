@@ -86,6 +86,22 @@
   .heart-icon { font-size: 46px; margin-bottom: 18px; animation: pulse 1.6s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { transform: scale(1);} 50% { transform: scale(1.12); } }
 
+  .lily-row { display: flex; align-items: flex-end; justify-content: center; gap: 16px; margin-bottom: 20px; }
+  .lily-row .lily-item {
+    width: 34px; height: 34px;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.35));
+    animation: sway 3.2s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+  .lily-row .lily-item svg { width: 100%; height: 100%; display: block; }
+  .lily-row .lily-item:nth-child(1) { animation-delay: 0s; width: 26px; height: 26px; }
+  .lily-row .lily-item:nth-child(2) { animation-delay: 0.6s; width: 40px; height: 40px; }
+  .lily-row .lily-item:nth-child(3) { animation-delay: 1.2s; width: 26px; height: 26px; }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-6deg) scale(1); }
+    50% { transform: rotate(6deg) scale(1.08); }
+  }
+
   /* ---------- poem ---------- */
   .poem { max-width: 480px; }
   .poem p {
@@ -237,6 +253,7 @@
 
   <!-- Scene 1: Intro -->
   <section class="scene active" id="scene-intro">
+    <div class="lily-row" id="introLilies"></div>
     <div class="heart-icon">💌</div>
     <h1 class="title">To <span class="name">Royce</span></h1>
     <p class="subtitle">from your baby</p>
@@ -369,6 +386,14 @@ const LILY_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   </g>
   <circle cx="50" cy="50" r="6" fill="#ffd54f"/>
 </svg>`;
+
+const introLiliesEl = document.getElementById('introLilies');
+for (let i = 0; i < 3; i++) {
+  const item = document.createElement('div');
+  item.className = 'lily-item';
+  item.innerHTML = LILY_SVG;
+  introLiliesEl.appendChild(item);
+}
 
 function spawnHeart() {
   const el = document.createElement('div');
