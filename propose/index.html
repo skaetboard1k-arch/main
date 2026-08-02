@@ -10,7 +10,9 @@
   html, body {
     margin: 0; padding: 0; height: 100%;
     overflow: hidden;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Damascus', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.5px;
     background: radial-gradient(circle at 50% 15%, #140007 0%, #000000 65%);
     color: #ffffff;
   }
@@ -48,7 +50,7 @@
   }
   .scene.active { opacity: 1; pointer-events: auto; transform: scale(1); }
 
-  h1, h2 { margin: 0 0 12px; font-weight: 400; letter-spacing: 0.5px; }
+  h1, h2 { margin: 0 0 12px; font-weight: 700; letter-spacing: -0.5px; }
   .title { font-size: clamp(28px, 8vw, 46px); }
   .subtitle { font-size: clamp(15px, 4vw, 18px); opacity: 0.85; margin-bottom: 28px; font-style: italic; }
 
@@ -69,7 +71,7 @@
     background: #fff;
     color: #a3123a;
     border: none;
-    font-weight: 600;
+    font-weight: 700;
     box-shadow: 0 8px 22px rgba(0,0,0,0.25);
   }
 
@@ -122,7 +124,7 @@
   }
   .cap-date {
     font-size: 12px;
-    letter-spacing: 1px;
+    letter-spacing: -0.2px;
     text-transform: uppercase;
     opacity: 0.75;
     font-style: normal;
@@ -177,7 +179,7 @@
     margin-bottom: 26px;
     text-align: left;
   }
-  .memory-form label { font-size: 13px; opacity: 0.75; letter-spacing: 0.5px; text-transform: uppercase; }
+  .memory-form label { font-size: 13px; opacity: 0.75; letter-spacing: -0.2px; text-transform: uppercase; }
   .memory-form input[type="text"],
   .memory-form input[type="date"],
   .memory-form textarea {
@@ -202,7 +204,7 @@
   }
   .memory-card img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
   .memory-card .memory-body { padding: 12px 14px; }
-  .memory-card .memory-date { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+  .memory-card .memory-date { font-size: 12px; letter-spacing: -0.2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
   .memory-card .memory-note { font-size: 15px; line-height: 1.5; }
   .memory-delete {
     position: absolute; top: 8px; right: 8px;
