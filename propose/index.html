@@ -117,6 +117,16 @@
     width: 100%;
     padding: 14px 16px 16px;
     background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+  }
+  .cap-date {
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.75;
+    font-style: normal;
+    margin-bottom: 3px;
+  }
+  .cap-activity {
     font-size: 15px;
     font-style: italic;
   }
@@ -145,10 +155,7 @@
   /* ---------- question ---------- */
   #question-scene { overflow: visible; }
   .question-title { font-size: clamp(26px, 7.5vw, 40px); margin-bottom: 40px; }
-  .btn-row { position: relative; display: flex; gap: 22px; align-items: center; justify-content: center; height: 70px; width: 100%; }
-  #yesBtn { transition: transform 0.25s ease; }
-  #noBtn { position: relative; z-index: 3; }
-  #noBtn.roaming { position: fixed; }
+  .btn-row { position: relative; display: flex; gap: 18px; align-items: center; justify-content: center; height: 70px; width: 100%; flex-wrap: wrap; }
 
   /* ---------- celebration ---------- */
   .celebrate .heart-icon { font-size: 60px; }
@@ -171,8 +178,8 @@
   <!-- Scene 1: Intro -->
   <section class="scene active" id="scene-intro">
     <div class="heart-icon">💌</div>
-    <h1 class="title">For Royce</h1>
-    <p class="subtitle">I made you something.</p>
+    <h1 class="title">To Royce</h1>
+    <p class="subtitle">from your baby</p>
     <button class="btn solid" onclick="goTo('poem')">Open it</button>
   </section>
 
@@ -208,18 +215,18 @@
   <!-- Scene 5: The Question -->
   <section class="scene" id="scene-question">
     <div class="heart-icon">💗</div>
-    <h1 class="question-title">Royce, will you<br>be my girlfriend?</h1>
+    <h1 class="question-title">Royce, will you<br>be my lady?</h1>
     <div class="btn-row">
-      <button class="btn solid" id="yesBtn" onclick="sayYes()">Yes</button>
-      <button class="btn" id="noBtn">No</button>
+      <button class="btn solid" id="yesBtn" onclick="sayYes('yes')">Yes</button>
+      <button class="btn solid" id="doubleYesBtn" onclick="sayYes('double')">Double yes</button>
     </div>
   </section>
 
   <!-- Scene 6: Celebration -->
   <section class="scene celebrate" id="scene-celebrate">
     <div class="heart-icon">🎉</div>
-    <h1 class="title">She said yes!</h1>
-    <p class="subtitle">Best answer I've ever gotten. I love you, Royce.</p>
+    <h1 class="title" id="celebrateTitle">She said yes!</h1>
+    <p class="subtitle" id="celebrateSubtitle">Best answer I've ever gotten. I love you, Royce.</p>
   </section>
 </div>
 
@@ -230,23 +237,23 @@
 const NAME = "Royce";
 
 const POEM_LINES = [
-  "Royce,",
-  "I've written and erased this a dozen times,",
-  "because nothing sounds big enough for what I mean.",
-  "So here's the simple version:",
-  "you make ordinary days feel like the good part.",
-  "you're the last text I want to read at night,",
-  "and the first thing I think of in the morning.",
-  "I didn't plan on this. I just know I don't want it any other way."
+  "We've been intertwined longer than we know,",
+  "and I can't wait to see how far we go.",
+  "Us finding each other felt unexpected,",
+  "and it's the one thing I want most protected.",
+  "I love you to the moon and back,",
+  "then back to the moon, cause our love can't be kept within the stars.",
+  "In the short time we've spent together,",
+  "my baby, you've stolen my heart."
 ];
 
+/* For each photo: fill in the date and what you two were doing. */
 const PHOTOS = [
-  { src: "photos/photo1.jpg", caption: "Add your caption here" },
-  { src: "photos/photo2.jpg", caption: "Add your caption here" },
-  { src: "photos/photo3.jpg", caption: "Add your caption here" },
-  { src: "photos/photo4.jpg", caption: "Add your caption here" },
-  { src: "photos/photo5.jpg", caption: "Add your caption here" },
-  { src: "photos/photo6.jpg", caption: "Add your caption here" }
+  { src: "photos/photo1.jpg", date: "Add the date", activity: "Add what we were doing" },
+  { src: "photos/photo2.jpg", date: "Add the date", activity: "Add what we were doing" },
+  { src: "photos/photo3.jpg", date: "Add the date", activity: "Add what we were doing" },
+  { src: "photos/photo4.jpg", date: "Add the date", activity: "Add what we were doing" },
+  { src: "photos/photo5.jpg", date: "Add the date", activity: "Add what we were doing" }
 ];
 
 const BUILDUP_LINES = [
@@ -330,7 +337,7 @@ PHOTOS.forEach((photo, i) => {
 
   const img = document.createElement('img');
   img.src = photo.src;
-  img.alt = photo.caption || '';
+  img.alt = photo.activity || '';
   const placeholder = document.createElement('div');
   placeholder.className = 'placeholder';
   placeholder.textContent = '💗';
@@ -339,7 +346,16 @@ PHOTOS.forEach((photo, i) => {
 
   const cap = document.createElement('div');
   cap.className = 'caption';
-  cap.textContent = photo.caption || '';
+  if (photo.date) {
+    const dateEl = document.createElement('div');
+    dateEl.className = 'cap-date';
+    dateEl.textContent = photo.date;
+    cap.appendChild(dateEl);
+  }
+  const activityEl = document.createElement('div');
+  activityEl.className = 'cap-activity';
+  activityEl.textContent = photo.activity || '';
+  cap.appendChild(activityEl);
 
   slide.appendChild(img);
   slide.appendChild(placeholder);
@@ -388,39 +404,22 @@ function startBuildup() {
   setTimeout(() => goTo('question'), 400 + BUILDUP_LINES.length * 1400 + 900);
 }
 
-/* ---------- the dodging No button ---------- */
-const noBtn = document.getElementById('noBtn');
-const yesBtn = document.getElementById('yesBtn');
-const questionScene = document.getElementById('scene-question');
-let dodges = 0;
-
-function dodge(e) {
-  if (e) e.preventDefault();
-  const margin = 24;
-  const w = noBtn.offsetWidth || 90;
-  const h = noBtn.offsetHeight || 50;
-  const maxX = window.innerWidth - w - margin;
-  const maxY = window.innerHeight - h - margin;
-  const x = margin + Math.random() * Math.max(0, maxX - margin);
-  const y = margin + Math.random() * Math.max(0, maxY - margin);
-
-  if (!noBtn.classList.contains('roaming')) {
-    noBtn.classList.add('roaming');
+/* ---------- yes / double yes -> celebration ---------- */
+const CELEBRATE_TEXT = {
+  yes: {
+    title: "She said yes!",
+    subtitle: "Best answer I've ever gotten. I love you, Royce."
+  },
+  double: {
+    title: "She said DOUBLE yes!",
+    subtitle: "Couldn't just say it once. I love you, Royce."
   }
-  noBtn.style.left = x + 'px';
-  noBtn.style.top = y + 'px';
+};
 
-  dodges++;
-  const scale = Math.min(1.6, 1 + dodges * 0.06);
-  yesBtn.style.transform = 'scale(' + scale + ')';
-}
-
-noBtn.addEventListener('mouseenter', dodge);
-noBtn.addEventListener('touchstart', dodge, { passive: false });
-noBtn.addEventListener('pointerdown', dodge);
-
-/* ---------- yes -> celebration ---------- */
-function sayYes() {
+function sayYes(variant) {
+  const text = CELEBRATE_TEXT[variant] || CELEBRATE_TEXT.yes;
+  document.getElementById('celebrateTitle').textContent = text.title;
+  document.getElementById('celebrateSubtitle').textContent = text.subtitle;
   goTo('celebrate');
   launchConfetti();
 }
