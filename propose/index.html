@@ -13,9 +13,12 @@
     font-family: 'Damascus', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
     font-weight: 700;
     letter-spacing: -0.5px;
+    word-spacing: -0.12em;
+    text-transform: lowercase;
     background: radial-gradient(circle at 50% 15%, #140007 0%, #000000 65%);
     color: #ffffff;
   }
+  .name { text-transform: none; }
   #app { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
 
   /* floating hearts + lilies background */
@@ -56,6 +59,10 @@
 
   .btn {
     font-family: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    word-spacing: inherit;
+    text-transform: lowercase;
     font-size: 17px;
     padding: 14px 34px;
     border-radius: 999px;
@@ -125,7 +132,6 @@
   .cap-date {
     font-size: 12px;
     letter-spacing: -0.2px;
-    text-transform: uppercase;
     opacity: 0.75;
     font-style: normal;
     margin-bottom: 3px;
@@ -179,7 +185,7 @@
     margin-bottom: 26px;
     text-align: left;
   }
-  .memory-form label { font-size: 13px; opacity: 0.75; letter-spacing: -0.2px; text-transform: uppercase; }
+  .memory-form label { font-size: 13px; opacity: 0.75; letter-spacing: -0.2px; }
   .memory-form input[type="text"],
   .memory-form input[type="date"],
   .memory-form textarea {
@@ -204,7 +210,7 @@
   }
   .memory-card img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
   .memory-card .memory-body { padding: 12px 14px; }
-  .memory-card .memory-date { font-size: 12px; letter-spacing: -0.2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+  .memory-card .memory-date { font-size: 12px; letter-spacing: -0.2px; opacity: 0.7; margin-bottom: 4px; }
   .memory-card .memory-note { font-size: 15px; line-height: 1.5; }
   .memory-delete {
     position: absolute; top: 8px; right: 8px;
@@ -232,7 +238,7 @@
   <!-- Scene 1: Intro -->
   <section class="scene active" id="scene-intro">
     <div class="heart-icon">💌</div>
-    <h1 class="title">To Royce</h1>
+    <h1 class="title">To <span class="name">Royce</span></h1>
     <p class="subtitle">from your baby</p>
     <button class="btn solid" onclick="goTo('poem')">Open it</button>
   </section>
@@ -269,7 +275,7 @@
   <!-- Scene 5: The Question -->
   <section class="scene" id="scene-question">
     <div class="heart-icon">💗</div>
-    <h1 class="question-title">Royce, will you<br>be my lady?</h1>
+    <h1 class="question-title"><span class="name">Royce</span>, will you<br>be my lady?</h1>
     <div class="btn-row">
       <button class="btn solid" id="yesBtn" onclick="sayYes('yes')">Yes</button>
       <button class="btn solid" id="doubleYesBtn" onclick="sayYes('double')">Double yes</button>
@@ -516,18 +522,18 @@ function startBuildup() {
 const CELEBRATE_TEXT = {
   yes: {
     title: "She said yes!",
-    subtitle: "Best answer I've ever gotten. I love you, Royce."
+    subtitle: "Best answer I've ever gotten. I love you, <span class=\"name\">Royce</span>."
   },
   double: {
     title: "She said DOUBLE yes!",
-    subtitle: "Couldn't just say it once. I love you, Royce."
+    subtitle: "Couldn't just say it once. I love you, <span class=\"name\">Royce</span>."
   }
 };
 
 function sayYes(variant) {
   const text = CELEBRATE_TEXT[variant] || CELEBRATE_TEXT.yes;
   document.getElementById('celebrateTitle').textContent = text.title;
-  document.getElementById('celebrateSubtitle').textContent = text.subtitle;
+  document.getElementById('celebrateSubtitle').innerHTML = text.subtitle;
   goTo('celebrate');
   launchConfetti();
 }
