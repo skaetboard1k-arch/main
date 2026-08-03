@@ -240,6 +240,16 @@
 
   canvas#confetti { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
 
+  .scene-back {
+    position: absolute; top: 18px; left: 18px; z-index: 6;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: #fff; font-size: 20px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
   .progress { position: fixed; top: 18px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; z-index: 4; }
   .progress span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.25); }
   .progress span.done { background: rgba(255,255,255,0.85); }
@@ -262,6 +272,7 @@
 
   <!-- Scene 2: Poem -->
   <section class="scene" id="scene-poem">
+    <button class="scene-back" onclick="goBack()">‹</button>
     <div class="poem" id="poemText"></div>
     <div class="continue-wrap" id="poemContinue">
       <button class="btn solid" onclick="goTo('gallery')">Keep going</button>
@@ -270,6 +281,7 @@
 
   <!-- Scene 3: Gallery -->
   <section class="scene" id="scene-gallery">
+    <button class="scene-back" onclick="goBack()">‹</button>
     <h2 class="title" style="font-size:clamp(20px,6vw,28px); margin-bottom:18px;">Look how far we've come</h2>
     <div class="gallery-wrap">
       <div class="gallery-viewport" id="galleryViewport"></div>
@@ -286,11 +298,13 @@
 
   <!-- Scene 4: Buildup -->
   <section class="scene buildup" id="scene-buildup">
+    <button class="scene-back" onclick="goBack()">‹</button>
     <div id="buildupText"></div>
   </section>
 
   <!-- Scene 5: The Question -->
   <section class="scene" id="scene-question">
+    <button class="scene-back" onclick="goBack()">‹</button>
     <div class="heart-icon">💗</div>
     <h1 class="question-title"><span class="name">Royce</span>, will you<br>be my lady?</h1>
     <div class="btn-row">
@@ -441,6 +455,11 @@ function goTo(name) {
 }
 progressEl.style.display = 'none';
 
+function goBack() {
+  const idx = SCENES.indexOf(currentScene);
+  if (idx > 0) goTo(SCENES[idx - 1]);
+}
+
 if (location.hash === '#memories') {
   goTo('memories');
 }
@@ -531,7 +550,11 @@ viewport.addEventListener('touchend', e => {
 /* ---------- buildup reveal ---------- */
 let buildupStarted = false;
 function startBuildup() {
-  if (buildupStarted) return;
+  if (buildupStarted) {
+    // already revealed (e.g. returning via back) - just re-schedule the advance
+    setTimeout(() => { if (currentScene === 'buildup') goTo('question'); }, 1200);
+    return;
+  }
   buildupStarted = true;
   const container = document.getElementById('buildupText');
   BUILDUP_LINES.forEach((line, i) => {
@@ -540,7 +563,9 @@ function startBuildup() {
     container.appendChild(p);
     setTimeout(() => p.classList.add('show'), 400 + i * 1400);
   });
-  setTimeout(() => goTo('question'), 400 + BUILDUP_LINES.length * 1400 + 900);
+  setTimeout(() => {
+    if (currentScene === 'buildup') goTo('question');
+  }, 400 + BUILDUP_LINES.length * 1400 + 900);
 }
 
 /* ---------- yes / double yes -> celebration ---------- */
