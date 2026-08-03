@@ -145,17 +145,39 @@
     padding: 14px 16px 16px;
     background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
   }
+  .cap-date, .cap-activity {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.35);
+    color: #fff;
+    font-family: inherit;
+    text-transform: none;
+    padding: 3px 0;
+  }
   .cap-date {
     font-size: 12px;
     letter-spacing: -0.2px;
-    opacity: 0.75;
+    opacity: 0.85;
     font-style: normal;
-    margin-bottom: 3px;
+    margin-bottom: 6px;
   }
+  .cap-date::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.7; }
   .cap-activity {
     font-size: 15px;
     font-style: italic;
+    border-bottom-color: rgba(255,255,255,0.2);
   }
+  .cap-activity::placeholder, .cap-date::placeholder { color: rgba(255,255,255,0.5); font-style: italic; }
+  .caption-saved {
+    font-size: 11px;
+    opacity: 0;
+    margin-top: 5px;
+    transition: opacity 0.3s ease;
+    text-transform: lowercase;
+  }
+  .caption-saved.show { opacity: 0.6; }
   .gallery-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 16px; }
   .nav-btn {
     background: rgba(255,255,255,0.15);
@@ -315,6 +337,7 @@
 
   <!-- Scene 6: Celebration -->
   <section class="scene celebrate" id="scene-celebrate">
+    <button class="scene-back" onclick="goBack()">‹</button>
     <div class="heart-icon">🎉</div>
     <h1 class="title" id="celebrateTitle">She said yes!</h1>
     <p class="subtitle" id="celebrateSubtitle">Best answer I've ever gotten. I love you, Royce.</p>
@@ -368,13 +391,13 @@ const POEM_LINES = [
   "my baby, you've stolen my heart."
 ];
 
-/* For each photo: fill in the date and what you two were doing. */
+/* The date and "what we were doing" for each photo are now editable right on the gallery page itself and are saved automatically. */
 const PHOTOS = [
-  { src: "photos/photo1.jpg", date: "Add the date", activity: "Add what we were doing" },
-  { src: "photos/photo2.jpg", date: "Add the date", activity: "Add what we were doing" },
-  { src: "photos/photo3.jpg", date: "Add the date", activity: "Add what we were doing" },
-  { src: "photos/photo4.jpg", date: "Add the date", activity: "Add what we were doing" },
-  { src: "photos/photo5.jpg", date: "Add the date", activity: "Add what we were doing" }
+  { src: "photos/photo1.jpg" },
+  { src: "photos/photo2.jpg" },
+  { src: "photos/photo3.jpg" },
+  { src: "photos/photo4.jpg" },
+  { src: "photos/photo5.jpg" }
 ];
 
 const BUILDUP_LINES = [
@@ -485,17 +508,41 @@ function startPoem() {
 }
 
 /* ---------- gallery ---------- */
+const CAPTIONS_KEY = 'royceGalleryCaptions';
+
+function loadCaptions() {
+  try {
+    return JSON.parse(localStorage.getItem(CAPTIONS_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveCaption(src, field, value) {
+  const all = loadCaptions();
+  all[src] = all[src] || {};
+  all[src][field] = value;
+  try {
+    localStorage.setItem(CAPTIONS_KEY, JSON.stringify(all));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 const viewport = document.getElementById('galleryViewport');
 const dotsWrap = document.getElementById('dots');
 let galleryIndex = 0;
+const savedCaptions = loadCaptions();
 
 PHOTOS.forEach((photo, i) => {
   const slide = document.createElement('div');
   slide.className = 'slide' + (i === 0 ? ' show' : '');
+  const saved = savedCaptions[photo.src] || {};
 
   const img = document.createElement('img');
   img.src = photo.src;
-  img.alt = photo.activity || '';
+  img.alt = saved.activity || '';
   const placeholder = document.createElement('div');
   placeholder.className = 'placeholder';
   placeholder.textContent = '💗';
@@ -504,16 +551,41 @@ PHOTOS.forEach((photo, i) => {
 
   const cap = document.createElement('div');
   cap.className = 'caption';
-  if (photo.date) {
-    const dateEl = document.createElement('div');
-    dateEl.className = 'cap-date';
-    dateEl.textContent = photo.date;
-    cap.appendChild(dateEl);
-  }
-  const activityEl = document.createElement('div');
+
+  const dateEl = document.createElement('input');
+  dateEl.type = 'date';
+  dateEl.className = 'cap-date';
+  dateEl.value = saved.date || '';
+  cap.appendChild(dateEl);
+
+  const activityEl = document.createElement('input');
+  activityEl.type = 'text';
   activityEl.className = 'cap-activity';
-  activityEl.textContent = photo.activity || '';
+  activityEl.placeholder = 'what were we doing?';
+  activityEl.value = saved.activity || '';
   cap.appendChild(activityEl);
+
+  const savedNote = document.createElement('div');
+  savedNote.className = 'caption-saved';
+  savedNote.textContent = 'saved';
+  cap.appendChild(savedNote);
+
+  let savedNoteTimer = null;
+  function flashSaved() {
+    savedNote.classList.add('show');
+    clearTimeout(savedNoteTimer);
+    savedNoteTimer = setTimeout(() => savedNote.classList.remove('show'), 1200);
+  }
+  // clicking/dragging the date or text field shouldn't flip the photo via swipe
+  [dateEl, activityEl].forEach(el => {
+    el.addEventListener('click', e => e.stopPropagation());
+    el.addEventListener('touchstart', e => e.stopPropagation());
+    el.addEventListener('touchend', e => e.stopPropagation());
+    el.addEventListener('touchmove', e => e.stopPropagation());
+  });
+  dateEl.addEventListener('change', () => { saveCaption(photo.src, 'date', dateEl.value); flashSaved(); });
+  activityEl.addEventListener('input', () => { saveCaption(photo.src, 'activity', activityEl.value); });
+  activityEl.addEventListener('blur', () => flashSaved());
 
   slide.appendChild(img);
   slide.appendChild(placeholder);
